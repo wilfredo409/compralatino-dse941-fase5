@@ -1,0 +1,52 @@
+# CompraLatino — despliegue con Docker Compose (Fase 3)
+# Uso:  cp .env.example .env  →  editar secretos  →  docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: compralatino
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: compralatino
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Se ejecutan SOLO la primera vez (volumen vacío), en orden alfabético:
+      # schema.sql de Fase 2 + las dos migraciones aditivas de Fase 3
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U compralatino -d compralatino"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Sin "ports": la base de datos NO se expone fuera de la red de Docker
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://compralatino:${DB_PASSWORD}@db:5432/compralatino
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 900
+      JWT_REFRESH_EXPIRES_IN: 1209600
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      PORT: 3000
+      YAUCTIONS_LATENCY_MS_MIN: 150
+      YAUCTIONS_LATENCY_MS_MAX: 900
+      YAUCTIONS_FAILURE_RATE: ${YAUCTIONS_FAILURE_RATE:-0}
+      YAUCTIONS_BREAKER_THRESHOLD: 5
+      YAUCTIONS_BREAKER_COOLDOWN_MS: 30000
+    # Sin "ports": solo nginx (web) lo alcanza
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:

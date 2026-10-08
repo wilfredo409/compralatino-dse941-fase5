@@ -1,0 +1,86 @@
+/* Paleta y tipografía inspiradas en los wireframes de Fase 2 (fondo claro,
+   tarjetas con borde marcado, acentos oscuros), llevadas a un acabado
+   presentable para esta primera versión funcional. */
+:root {
+  --tinta: #1a1a1a;
+  --acento: #222;
+  --borde: #ddd;
+  --fondo-suave: #f7f7f7;
+  --exito: #1b7a3d;
+  --peligro: #b3261e;
+  --aviso: #8a6d00;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  color: var(--tinta);
+  background: #fff;
+}
+a { color: inherit; }
+
+.contenedor { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+.barra {
+  background: var(--acento);
+  color: #fff;
+  padding: 12px 0;
+}
+.barra .contenedor { display: flex; align-items: center; gap: 20px; }
+.barra .marca { font-weight: 700; letter-spacing: .3px; }
+.barra nav { display: flex; gap: 16px; margin-left: auto; font-size: 14px; }
+.barra nav a, .barra nav button {
+  color: #fff; text-decoration: none; background: none; border: none; cursor: pointer; font: inherit;
+}
+.barra nav a.activo { text-decoration: underline; }
+
+main { padding: 24px 0 48px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+
+.tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+.tarjeta img { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; background: var(--fondo-suave); }
+.tarjeta h3 { font-size: 14px; margin: 8px 0 4px; }
+.precio { font-weight: 700; font-size: 18px; }
+.etiqueta { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--fondo-suave); color: #555; margin-top: 4px; }
+.etiqueta.subasta { background: #fff3cd; color: var(--aviso); }
+
+.btn {
+  display: inline-block; padding: 8px 14px; border-radius: 6px; border: none;
+  background: var(--acento); color: #fff; cursor: pointer; font: inherit; text-decoration: none;
+}
+.btn.secundario { background: #fff; color: var(--acento); border: 1px solid var(--acento); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.form { max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
+.form input, .form select {
+  padding: 9px 10px; border: 1px solid var(--borde); border-radius: 6px; font: inherit;
+}
+.form label { font-size: 13px; color: #444; margin-bottom: -4px; }
+
+.alerta { padding: 10px 12px; border-radius: 6px; font-size: 14px; margin-bottom: 14px; }
+.alerta.error { background: #fdecea; color: var(--peligro); }
+.alerta.exito { background: #e8f5e9; color: var(--exito); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--borde); padding: 8px 10px; text-align: left; }
+th { background: var(--fondo-suave); font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { border: 1px solid var(--borde); border-radius: 8px; padding: 12px; }
+.kpi .lbl { font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: .3px; }
+.kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+.pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.pill.CERRADO { background: #e8f5e9; color: var(--exito); }
+.pill.ABIERTO { background: #fdecea; color: var(--peligro); }
+.pill.SEMI_ABIERTO { background: #fff3cd; color: var(--aviso); }
+
+.filtros { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filtros select, .filtros input { padding: 7px 9px; border: 1px solid var(--borde); border-radius: 6px; font: inherit; }

@@ -1,0 +1,39 @@
+// ============================================================
+// CompraLatino - Fase 3 - Anexo H.4
+// Medidas DAX usadas en los paneles del apartado 15.10
+// ============================================================
+ 
+Ventas del periodo =
+SUM ( fact_ventas[total_usd] )
+ 
+Pedidos =
+DISTINCTCOUNT ( fact_ventas[id_pedido_origen] )
+ 
+Ticket promedio =
+DIVIDE ( [Ventas del periodo], [Pedidos] )
+ 
+Unidades vendidas =
+SUM ( fact_ventas[cantidad] )
+ 
+Tasa de exito YAuctions =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( fact_integracion_yauctions ),
+                fact_integracion_yauctions[resultado] = "EXITOSA" ),
+    COUNTROWS ( fact_integracion_yauctions )
+)
+ 
+CTR Recomendaciones =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( fact_recomendaciones ),
+                fact_recomendaciones[fue_clic] = TRUE ),
+    COUNTROWS ( fact_recomendaciones )
+)
+ 
+Tasa de conversion de recomendaciones =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( fact_recomendaciones ),
+                fact_recomendaciones[fue_clic] = TRUE,
+                fact_recomendaciones[fue_compra] = TRUE ),
+    CALCULATE ( COUNTROWS ( fact_recomendaciones ),
+                fact_recomendaciones[fue_clic] = TRUE )
+)
