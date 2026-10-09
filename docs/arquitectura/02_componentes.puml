@@ -1,0 +1,99 @@
+@startuml 02_componentes
+' ============================================================
+' CompraLatino - Fase 2 - Figura 2
+' Diagrama de componentes UML - Monolito modular en capas
+' Vista de capas y modulos. El detalle interno de cada modulo
+' se documenta en las Tablas 14 a 17 del documento.
+' Pegar en https://www.planttext.com/
+' ============================================================
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam nodesep 14
+skinparam ranksep 34
+skinparam package {
+  BorderColor #444444
+  BackgroundColor #FAFAFA
+}
+
+package "CAPA DE PRESENTACION — Vue.js 3 (SPA responsiva: desktop / tablet / smartphone)" as P {
+  component "Vistas de\ncliente" as VC
+  component "Vistas de\nadministracion" as VA
+  component "Router +\nGuards JWT" as RT
+  component "Cliente HTTP (Axios)\n+ Store (Pinia)" as HC
+}
+
+package "CAPA DE LOGICA DE NEGOCIO — Node.js 20 + Express  (API REST documentada con OpenAPI 3.0)" as L {
+  package "Componentes transversales" as X {
+    component "AuthMiddleware\nJWT + RBAC" as MA
+    component "ErrorHandler" as ME
+    component "Logger /\nTelemetria" as LG
+    component "CacheProvider" as CH
+    component "Scheduler" as SD
+    component "ConfigProvider" as CF
+  }
+  component "**M1 · Cuentas**\nAuthController · UserService\nJwtProvider · PasswordHasher" as M1
+  component "**M2 · Catalogo**\nCatalogController · CatalogService\nCurrencyConverter · CatalogSyncJob" as M2
+  component "**M3 · Compras**\nOrderController · OrderService\nBiddingService · **YAuctionsAdapter**\nPaymentClient · ShippingCalculator" as M3 #DDDDDD
+  component "**M4 · Recomendaciones**\nRecommendationController\nRecommendationService · Job" as M4
+  component "**M5 · Administracion**\nAdminController · MetricsService\nReportService · PermissionService" as M5
+}
+
+package "CAPA DE ACCESO A DATOS — ORM Sequelize / Prisma" as D {
+  component "UserRepository" as R1
+  component "ProductRepository" as R2
+  component "OrderRepository" as R3
+  component "HistoryRepository" as R4
+  component "AuditRepository" as R5
+}
+
+database "PostgreSQL 16\nAmazon RDS for\nPostgreSQL" as DB
+folder "Amazon S3\nimagenes de productos" as BLOB
+cloud "YAuctions Japon\ninterfaz simulada" as YA
+cloud "Servicio de\ntipo de cambio" as FX
+cloud "Pasarela\nde pago" as PAY
+
+VC -[hidden]right- VA
+VA -[hidden]right- RT
+RT -[hidden]right- HC
+MA -[hidden]right- ME
+ME -[hidden]right- LG
+LG -[hidden]right- CH
+CH -[hidden]right- SD
+SD -[hidden]right- CF
+M1 -[hidden]right- M2
+M2 -[hidden]right- M3
+M3 -[hidden]right- M4
+M4 -[hidden]right- M5
+R1 -[hidden]right- R2
+R2 -[hidden]right- R3
+R3 -[hidden]right- R4
+R4 -[hidden]right- R5
+
+HC --> MA : "HTTPS · REST/JSON · Bearer JWT"
+MA --> M1
+MA --> M2
+MA --> M3
+MA --> M4
+MA --> M5
+SD --> M2 : "sincroniza catalogo"
+SD --> M4 : "genera recomendaciones"
+CH <-- M2
+M1 --> R1
+M2 --> R2
+M3 --> R3
+M4 --> R4
+M5 --> R5
+M2 --> FX
+M3 --> YA : "patron Adapter\n+ Circuit Breaker"
+M3 --> PAY
+R1 --> DB
+R2 --> DB
+R3 --> DB
+R4 --> DB
+R5 --> DB
+R2 --> BLOB
+@enduml
