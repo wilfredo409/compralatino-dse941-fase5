@@ -1,0 +1,100 @@
+@startuml 03_despliegue
+' ============================================================
+' CompraLatino - Fase 2 - Figura 3
+' Diagrama de despliegue UML - Infraestructura en Amazon Web Services (AWS)
+' Incluye hardware (dispositivos cliente), software y servicios externos
+' Pegar en https://www.planttext.com/
+' ============================================================
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam node {
+  BorderColor #333333
+  BackgroundColor #FFFFFF
+}
+
+node "Dispositivos del cliente\n<size:9>HARDWARE" as Disp {
+  node "PC / Laptop" as PC {
+    artifact "Navegador web" as Nav1
+  }
+  node "Tablet" as TAB {
+    artifact "Navegador web" as Nav2
+  }
+  node "Smartphone" as SP {
+    artifact "Navegador web" as Nav3
+  }
+}
+
+cloud "Amazon Web Services  ·  Region us-east-1 (N. Virginia)  ·  VPC compralatino-prod" as AZ {
+
+  node "Amazon CloudFront + S3\n<size:9>Plan gratuito · CDN global · TLS 1.3" as SWA {
+    artifact "SPA Vue.js 3\n<size:9>bundle estatico (HTML/CSS/JS)" as SPA
+  }
+
+  node "Amazon EC2 (Elastic Beanstalk)\n<size:9>t3.small · 2 vCPU · 2 GB RAM" as APP {
+    artifact "Runtime Node.js 20 LTS" as NODE
+    artifact "API REST Express\n<size:9>monolito modular (M1..M5)" as API
+    artifact "Swagger UI / OpenAPI 3.0" as SW
+  }
+
+  node "Amazon RDS for PostgreSQL\n<size:9>Single-AZ · db.t4g.small · 32 GB · backups 7 dias" as PG {
+    database "compralatino_db" as DB
+  }
+
+  node "Amazon ElastiCache (Redis OSS)\n<size:9>cache.t4g.micro · 0.5 GB" as REDIS {
+    artifact "Cache de catalogo,\ntasa de cambio y sesiones" as CA
+  }
+
+  node "Amazon S3 (imagenes)\n<size:9>S3 Estandar" as BLOB {
+    artifact "Bucket: producto-imagenes" as IMG
+  }
+
+  node "AWS Secrets Manager\n<size:9>Estandar" as KV {
+    artifact "Secretos: cadena de conexion,\nclaves de API, firma JWT" as SEC
+  }
+
+  node "Amazon CloudWatch\n(logs y metricas)" as AI {
+    artifact "Trazas, metricas y alertas" as TR
+  }
+}
+
+node "GitHub" as GH {
+  artifact "Repositorio Git\n(monorepo)" as REPO
+  artifact "GitHub Actions\n<size:9>CI/CD: build, test, deploy" as GA
+  artifact "Imagen Docker\n<size:9>entorno local reproducible" as DK
+}
+
+cloud "Servicios externos" as EXT {
+  node "YAuctions Japon\n<size:9>interfaz simulada" as YA
+  node "API de tipo de cambio" as FX
+  node "Pasarela de pago" as PAY
+  node "Servicio de correo" as MAIL
+}
+
+Nav1 --> SWA : HTTPS / TLS 1.3
+Nav2 --> SWA : HTTPS / TLS 1.3
+Nav3 --> SWA : HTTPS / TLS 1.3
+SPA --> API : "HTTPS · REST/JSON · JWT"
+
+API --> DB : "TCP 5432 · SSL obligatorio\n(ORM Sequelize/Prisma)"
+API --> CA : "TCP 6379 · TLS"
+API --> IMG : "HTTPS · URL prefirmada"
+API --> SEC : "HTTPS · Rol de IAM"
+API --> TR : "Agente / SDK de logs"
+
+API --> YA : "HTTPS · REST/JSON\n(YAuctionsAdapter)"
+API --> FX : "HTTPS · REST/JSON"
+API --> PAY : "HTTPS · REST/JSON + webhook"
+API --> MAIL : "HTTPS · API"
+
+GA --> SWA : "deploy frontend"
+GA --> APP : "deploy backend"
+REPO --> GA
+
+note bottom of AZ
+  Entornos: desarrollo (Docker local) · pruebas (entorno de staging) · produccion.
+  Escalado vertical de t3.small a t3.medium previsto si la demanda lo requiere.
+end note
+@enduml

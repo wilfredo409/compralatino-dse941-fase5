@@ -1,0 +1,47 @@
+@startuml 01_contexto
+' ============================================================
+' CompraLatino - Fase 2 - Figura 1
+' Diagrama de contexto del sistema (C4 - Nivel 1, notacion UML)
+' Pegar en https://www.planttext.com/
+' ============================================================
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam rectangle {
+  BorderColor #333333
+  BackgroundColor #FFFFFF
+}
+skinparam actor {
+  BorderColor #333333
+  BackgroundColor #FFFFFF
+}
+left to right direction
+
+actor "Cliente\n(web / tablet / smartphone)" as Cliente
+actor "Administrador\nCompraLatino" as Admin
+
+rectangle "**Plataforma CompraLatino**\n<size:10>Monolito modular en capas\nNode.js + Express / Vue.js 3 / PostgreSQL\nDesplegado en Amazon Web Services (AWS)" as Sistema #F5F5F5
+
+rectangle "YAuctions Japon\n<size:10>Subastas y compra directa\n(interfaz simulada)" as YA
+rectangle "Servicio de tipo de cambio\n<size:10>Cotizacion JPY -> USD" as FX
+rectangle "Pasarela de pago\n<size:10>Tokenizacion de tarjetas" as Pago
+rectangle "Servicio de correo\n<size:10>Notificaciones transaccionales" as Correo
+rectangle "Operador logistico\n<size:10>Seguimiento de envios" as Logistica
+
+Cliente --> Sistema : "Crea cuenta, busca,\ncompra y consulta pedidos\n[HTTPS/TLS 1.3]"
+Admin --> Sistema : "Monitorea metricas\ny gestiona catalogo\n[HTTPS/TLS 1.3]"
+
+Sistema --> YA : "Consulta catalogo y\ncoloca ofertas/compras\n[REST/JSON]"
+Sistema --> FX : "Obtiene tasa JPY/USD\n[REST/JSON]"
+Sistema --> Pago : "Autoriza y captura cobros\n[REST/JSON + webhook]"
+Sistema --> Correo : "Envia confirmaciones\n[SMTP/API]"
+Sistema --> Logistica : "Consulta estado de envio\n[REST/JSON]"
+
+note bottom of Sistema
+  Atiende las cinco necesidades del caso:
+  RF-01 Cuentas · RF-02 Catalogo · RF-03 Compras
+  RF-04 Recomendaciones · RF-05 Administracion
+end note
+@enduml
