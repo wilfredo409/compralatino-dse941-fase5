@@ -1,0 +1,51 @@
+name: CI
+
+# Se ejecuta en cada pull request y en cada push a main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (sintaxis y pruebas)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc   # Node.js 22 LTS, la misma version del equipo
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Verificar la sintaxis de todos los archivos JavaScript
+        run: find src db -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Pruebas automatizadas (se ejecutan cuando exista la carpeta test)
+        run: if [ -d test ]; then npm test; else echo "Aun no hay carpeta test; se omite."; fi
+
+  frontend:
+    name: Frontend (construccion)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  docker:
+    name: Imagenes Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t compralatino-backend ./backend
+      - run: docker build -t compralatino-frontend ./frontend

@@ -1,8 +1,8 @@
 # CompraLatino — Código fuente Fase 3 (DSE941)
 
 Primera versión funcional del software: backend Node.js + Express sobre
-PostgreSQL 16 y frontend en Vue.js 3. La implementación del contrato `openapi.yaml` y el esquema
-`schema.sql` definidos en la Fase 2, complementados durante la Fase 3 mediante migraciones controladas para los ajustes detectados durante la construcción.
+PostgreSQL 16, siguiendo exactamente el contrato `openapi.yaml` y el esquema
+`schema.sql` de Fase 2, más un frontend mínimo en Vue.js 3 que lo consume.
 
 Ya se probó de punta a punta en un entorno limpio (PostgreSQL 16 real, no
 simulado): registro/login, catálogo con filtros, compra directa con pago,
@@ -13,19 +13,21 @@ qué falta confirmar con el docente.
 
 ## 1. Requisitos
 
-- Node.js 18+ (probado con Node 22).
+- Node.js 22 LTS (versión homologada por el equipo; también fijada en `.nvmrc`, en los `engines` de cada `package.json`, en los Dockerfile y en el flujo de CI).
 - PostgreSQL 16 corriendo localmente (o accesible por `DATABASE_URL`).
 
 ## 2. Base de datos
 
 ```bash
-createdb compralatino
-psql -d compralatino -f deploy/db-init/00_schema_fase2.sql
-psql -d compralatino -f deploy/db-init/01_migracion_001.sql
-psql -d compralatino -f deploy/db-init/02_migracion_002.sql
+createdb compralatino   # o usa el gestor gráfico que prefieran
+psql -d compralatino -f "../fase 2/schema.sql"     # schema.sql de Fase 2, sin tocar (ejecutar desde tareas/fase 3/)
+psql -d compralatino -f codigo/backend/db/migrations/001_pedido_codigo_seq.sql
+psql -d compralatino -f codigo/backend/db/migrations/002_fix_usuarios_estado_length.sql
 ```
 
-Las migraciones complementan el esquema de la Fase 2 con los ajustes detectados durante la construcción de la primera versión funcional. Entre ellos se incluye la generación del código secuencial de pedidos y la ampliación del campo `usuarios.estado` para admitir correctamente el valor `pendiente_verificacion`.
+Las dos migraciones son aditivas (no alteran nada de lo ya entregado en
+Fase 2 salvo un defecto real que encontramos al probar, ver
+`supuestos_fase3.md` #10).
 
 ## 3. Backend
 
@@ -95,22 +97,3 @@ asumió para poder avanzar sin bloquear el trabajo en un criterio de negocio
 que el equipo todavía no ha discutido, y qué haría falta para llevarlo a
 producción real (pasarela de pago real, verificación de correo, resolución
 real de subastas, etc.).
-
-## 7. Arquitectura y despliegue en AWS
-
-A partir de la Fase 3, AWS sustituye a Microsoft Azure como plataforma de nube de referencia, conforme a la decisión ADR-07.
-
-La solución mantiene una arquitectura de monolito modular en capas. Para la validación de la Fase 3 se dispone de un entorno reproducible mediante DOcker Compose, mientras que la arquitectura objetivo en AWS contempla servicios administrados para las etapas posteriores.
-
-Los principales servicios previstos son:
-
-- Amazon CloudFront y Amazon S3 para la distribución del frontend y contenido estático.
-- Amazon EC2 para la ejecución del backend Node.js + Express.
-- Amazon RDS for PostgreSQL como base de datos administrada.
-- Amazon ElastiCache para Redis como servicio caché.
-- AWS Secrets Manager para la gestión de secretos.
-- Amazon CloudWatch para registros, métricas y monitoreo.
-
-Las intrucciones de despliegue estan en `GUIA_DESPLIEGUE_AWS.md`.
-
-Los diagramas actualizados de arquitectura se encuentran en `docs/arquitectura/` y se incluyen en formatos Draw.io, PNG y PlantUML.
