@@ -203,8 +203,11 @@ async function main() {
       }
     }
 
-    // Un pedido cancelado y uno con pago rechazado, para que el panel admin
-    // muestre "pedidos que requieren atención" (ver W06) con datos reales.
+    // Un pedido con pago rechazado, para que el panel admin muestre "pedidos
+    // que requieren atención" (ver W06) con datos reales. Coherente con el
+    // webhook de pagos (webhooks.routes.js): cuando el pago se rechaza, el
+    // pedido pasa a 'cancelado'. Así el cliente ve «Cancelado» en «Mis pedidos»
+    // y el panel admin lo lista con el motivo «Pago rechazado».
     const laura = idsUsuarios['laura.pineda@demo.compralatino.com'];
     const { rows: dirLaura } = await client.query('SELECT id FROM direcciones WHERE id_usuario = $1', [laura]);
     const productoBarato = productosPorCategoria['Instrumentos'].find(Boolean);
@@ -212,7 +215,7 @@ async function main() {
     const totalRechazado = Number(prodBarato[0].precio_usd) + 12 + Math.round(Number(prodBarato[0].precio_usd) * 0.05 * 100) / 100;
     const { rows: pedidoRechazado } = await client.query(
       `INSERT INTO pedidos (codigo, id_usuario, id_direccion, estado, subtotal_usd, flete_usd, comision_usd, total_usd)
-       VALUES ($1,$2,$3,'creado',$4,12,$5,$6) RETURNING id`,
+       VALUES ($1,$2,$3,'cancelado',$4,12,$5,$6) RETURNING id`,
       [`CL-${new Date().getFullYear()}-0099`, laura, dirLaura[0].id, prodBarato[0].precio_usd, (Number(prodBarato[0].precio_usd) * 0.05).toFixed(2), totalRechazado.toFixed(2)]
     );
     await client.query(
