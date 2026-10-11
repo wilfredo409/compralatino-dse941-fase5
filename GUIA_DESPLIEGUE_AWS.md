@@ -83,7 +83,9 @@ La primera vez, Postgres ejecuta solo el `schema.sql` de Fase 2 y las 2 migracio
 
 ## 6. Probar
 
-Abre `http://IP_PUBLICA` en el navegador. Cuentas de demostración (las mismas del README del código):
+Abre `http://IP_PUBLICA` en el navegador. La documentación interactiva de la
+API también está disponible en `http://IP_PUBLICA/api/docs/`. Cuentas de
+demostración (las mismas del README del código):
 
 - Administrador: `admin@compralatino.com` / `Admin1234!`
 - Cliente con compras: `laura.pineda@demo.compralatino.com` / `Demo1234!`

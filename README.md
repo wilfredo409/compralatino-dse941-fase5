@@ -34,8 +34,14 @@ cd backend
 cp .env.example .env        # ajustar DATABASE_URL si es necesario
 npm install
 npm run seed                 # datos de demostración (catálogo, usuarios, historial)
-npm start                    # http://localhost:3000/api/v1
+npm start                    # API: http://localhost:3000/api/v1
 ```
+
+Con Docker Compose, nginx publica la aplicación en el puerto 80 y reenvía las
+rutas `/api/` al backend. Por eso, la documentación interactiva está en
+`http://localhost/api/docs/`. Si ejecutas el backend directamente con `npm start`
+(sin nginx), está en `http://localhost:3000/api/docs/`. Swagger UI carga el
+contrato `openapi.yaml` de la raíz del proyecto.
 
 Usuarios de prueba que crea el seed (contraseñas en `db/seed.js`):
 

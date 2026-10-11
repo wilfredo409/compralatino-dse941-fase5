@@ -1,0 +1,608 @@
+openapi: 3.0.3
+info:
+  title: CompraLatino API
+  description: >
+    Contrato REST de la capa de lógica de negocio de CompraLatino, versionado bajo
+    /api/v1 y documentado con OpenAPI 3.0 según lo establecido en el apartado 8.8
+    y el Anexo B del documento de Fase 2. Formaliza como archivo ejecutable la
+    Tabla 23 (Endpoints principales de la API REST por módulo).
+  version: "1.0.0"
+  contact:
+    name: Equipo CompraLatino — DSE941
+servers:
+  - url: https://api.compralatino.azurewebsites.net/api/v1
+    description: Azure App Service (producción)
+  - url: http://localhost:3000/api/v1
+    description: Entorno local de desarrollo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: M1 · Cuentas
+  - name: M2 · Catálogo
+  - name: M3 · Compras
+  - name: M4 · Recomendaciones
+  - name: M5 · Administración
+
+paths:
+  /auth/registro:
+    post:
+      tags: [M1 · Cuentas]
+      summary: Crea una cuenta y dispara el correo de verificación
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, nombre, apellido]
+              properties:
+                email: { type: string, format: email, maxLength: 150 }
+                password: { type: string, format: password, minLength: 8 }
+                nombre: { type: string, maxLength: 80 }
+                apellido: { type: string, maxLength: 80 }
+                telefono: { type: string, maxLength: 25, nullable: true }
+      responses:
+        '201':
+          description: Cuenta creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '409': { $ref: '#/components/responses/ErrorConflicto' }
+
+  /auth/login:
+    post:
+      tags: [M1 · Cuentas]
+      summary: Autentica y devuelve el token de acceso y el de renovación
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPar' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /auth/refresh:
+    post:
+      tags: [M1 · Cuentas]
+      summary: Renueva el token de acceso vencido
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: Token renovado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPar' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /usuarios/me:
+    get:
+      tags: [M1 · Cuentas]
+      summary: Consulta el perfil y las direcciones del usuario autenticado
+      responses:
+        '200':
+          description: Perfil del usuario
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+    put:
+      tags: [M1 · Cuentas]
+      summary: Actualiza el perfil y las direcciones del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Usuario' }
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /productos:
+    get:
+      tags: [M2 · Catálogo]
+      summary: Búsqueda paginada con filtros de categoría, tipo de venta y rango de precio
+      security: []
+      parameters:
+        - { name: categoria, in: query, schema: { type: integer } }
+        - { name: tipoVenta, in: query, schema: { type: string, enum: [fijo, subasta] } }
+        - { name: precioMin, in: query, schema: { type: number } }
+        - { name: precioMax, in: query, schema: { type: number } }
+        - { name: q, in: query, description: Texto libre sobre el título, schema: { type: string } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Página de resultados del catálogo
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginaCursor'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Producto' }
+
+  /productos/{id}:
+    get:
+      tags: [M2 · Catálogo]
+      summary: Ficha completa del producto con precio convertido y costos estimados
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/ProductoId' }
+      responses:
+        '200':
+          description: Ficha del producto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Producto' }
+        '404': { $ref: '#/components/responses/ErrorNoEncontrado' }
+
+  /categorias:
+    get:
+      tags: [M2 · Catálogo]
+      summary: Árbol de categorías del catálogo
+      security: []
+      responses:
+        '200':
+          description: Árbol de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Categoria' }
+
+  /pedidos:
+    post:
+      tags: [M3 · Compras]
+      summary: Crea el pedido a partir de los ítems seleccionados y calcula el total
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idDireccion, items]
+              properties:
+                idDireccion: { type: string, format: uuid }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [idProducto, cantidad]
+                    properties:
+                      idProducto: { type: string, format: uuid }
+                      cantidad: { type: integer, minimum: 1 }
+      responses:
+        '201':
+          description: Pedido creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pedido' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+    get:
+      tags: [M3 · Compras]
+      summary: Historial de pedidos del usuario con su estado y seguimiento
+      parameters:
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Página del historial de pedidos
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginaCursor'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Pedido' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /pedidos/{id}/pago:
+    post:
+      tags: [M3 · Compras]
+      summary: Autoriza el cobro y confirma el pedido
+      parameters:
+        - { $ref: '#/components/parameters/PedidoId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [proveedor, tokenPago]
+              properties:
+                proveedor: { type: string, maxLength: 40 }
+                tokenPago: { type: string }
+      responses:
+        '202':
+          description: Cobro aceptado; el pedido queda en procesamiento
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pago' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '404': { $ref: '#/components/responses/ErrorNoEncontrado' }
+        '409': { $ref: '#/components/responses/ErrorConflicto' }
+
+  /pedidos/{id}/ofertas:
+    post:
+      tags: [M3 · Compras]
+      summary: Coloca una oferta sobre un producto en subasta
+      parameters:
+        - { $ref: '#/components/parameters/PedidoId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idProducto, montoJpy]
+              properties:
+                idProducto: { type: string, format: uuid }
+                montoJpy: { type: number }
+      responses:
+        '202':
+          description: Oferta enviada a YAuctions mediante YAuctionsAdapter
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Oferta' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '503': { $ref: '#/components/responses/ErrorDependenciaExterna' }
+
+  /webhooks/pagos:
+    post:
+      tags: [M3 · Compras]
+      summary: Recibe la confirmación firmada de la pasarela de pago
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200': { description: Notificación procesada }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /recomendaciones:
+    get:
+      tags: [M4 · Recomendaciones]
+      summary: Recomendaciones vigentes del usuario autenticado con el motivo de cada una
+      responses:
+        '200':
+          description: Lista de recomendaciones vigentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Recomendacion' }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+
+  /admin/metricas:
+    get:
+      tags: [M5 · Administración]
+      summary: Indicadores del periodo y salud de la integración externa
+      responses:
+        '200': { description: Indicadores del periodo }
+        '401': { $ref: '#/components/responses/ErrorAutenticacion' }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+
+  /admin/pedidos:
+    get:
+      tags: [M5 · Administración]
+      summary: Listado de pedidos con filtros e identificación de los que requieren atención
+      parameters:
+        - { name: estado, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Página de pedidos
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginaCursor'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Pedido' }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+
+  /admin/reportes/transacciones:
+    get:
+      tags: [M5 · Administración]
+      summary: Reporte exportable de transacciones por periodo
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Archivo de reporte (CSV)
+          content:
+            text/csv: { schema: { type: string } }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+
+  /admin/usuarios:
+    get:
+      tags: [M5 · Administración]
+      summary: Gestión de usuarios, roles y permisos — listado
+      parameters:
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Página de usuarios
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginaCursor'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Usuario' }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+    put:
+      tags: [M5 · Administración]
+      summary: Gestión de usuarios, roles y permisos — actualización
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Usuario' }
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/ErrorValidacion' }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+        '404': { $ref: '#/components/responses/ErrorNoEncontrado' }
+
+  /admin/auditoria:
+    get:
+      tags: [M5 · Administración]
+      summary: Consulta de la bitácora de operaciones sensibles
+      parameters:
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Página de la bitácora de auditoría
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginaCursor'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/RegistroAuditoria' }
+        '403': { $ref: '#/components/responses/ErrorAutorizacion' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    webhookSignature:
+      type: apiKey
+      in: header
+      name: X-Signature
+
+  parameters:
+    Limite:
+      name: limite
+      in: query
+      description: Cantidad máxima de elementos por página
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      description: Cursor de continuación devuelto por la página anterior
+      schema: { type: string, nullable: true }
+    ProductoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PedidoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        email: { type: string, format: email, maxLength: 150 }
+        nombre: { type: string, maxLength: 80 }
+        apellido: { type: string, maxLength: 80 }
+        telefono: { type: string, maxLength: 25, nullable: true }
+        estado: { type: string, enum: [activo, suspendido, pendiente_verificacion] }
+        fechaRegistro: { type: string, format: date-time, readOnly: true }
+        direcciones:
+          type: array
+          items: { $ref: '#/components/schemas/Direccion' }
+
+    Direccion:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        pais: { type: string, maxLength: 60 }
+        departamento: { type: string, maxLength: 60 }
+        ciudad: { type: string, maxLength: 60 }
+        detalle: { type: string, maxLength: 200 }
+        esPrincipal: { type: boolean }
+
+    Categoria:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string, maxLength: 80 }
+        idPadre: { type: integer, nullable: true }
+        subcategorias:
+          type: array
+          items: { $ref: '#/components/schemas/Categoria' }
+
+    Producto:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        idExternoYa: { type: string, maxLength: 60 }
+        idCategoria: { type: integer }
+        titulo: { type: string, maxLength: 200 }
+        descripcion: { type: string, nullable: true }
+        precioJpy: { type: number }
+        precioUsd: { type: number, nullable: true }
+        tipoVenta: { type: string, enum: [fijo, subasta] }
+        fechaFinSubasta: { type: string, format: date-time, nullable: true }
+        stock: { type: integer }
+        imagenes:
+          type: array
+          items: { type: string, format: uri }
+
+    Pedido:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        codigo: { type: string, maxLength: 20, readOnly: true }
+        estado: { type: string, enum: [creado, pagado, en_proceso, enviado, entregado, cancelado] }
+        subtotalUsd: { type: number }
+        fleteUsd: { type: number }
+        comisionUsd: { type: number }
+        totalUsd: { type: number }
+        fechaCreacion: { type: string, format: date-time, readOnly: true }
+        detalle:
+          type: array
+          items: { $ref: '#/components/schemas/PedidoDetalle' }
+
+    PedidoDetalle:
+      type: object
+      properties:
+        idProducto: { type: string, format: uuid }
+        cantidad: { type: integer }
+        precioUnitarioUsd: { type: number }
+
+    Oferta:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        idProducto: { type: string, format: uuid }
+        montoJpy: { type: number }
+        estado: { type: string, enum: [enviada, aceptada, superada, rechazada] }
+        fechaEnvio: { type: string, format: date-time, readOnly: true }
+
+    Pago:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        proveedor: { type: string, maxLength: 40 }
+        estado: { type: string, enum: [autorizado, capturado, rechazado] }
+        monto: { type: number }
+        fecha: { type: string, format: date-time, readOnly: true }
+
+    Recomendacion:
+      type: object
+      properties:
+        idProducto: { type: string, format: uuid }
+        puntaje: { type: number }
+        motivo: { type: string, maxLength: 120, nullable: true }
+        fechaGeneracion: { type: string, format: date-time }
+
+    RegistroAuditoria:
+      type: object
+      properties:
+        id: { type: integer }
+        idUsuario: { type: string, format: uuid, nullable: true }
+        accion: { type: string, maxLength: 60 }
+        entidad: { type: string, maxLength: 60 }
+        idEntidad: { type: string, nullable: true }
+        fecha: { type: string, format: date-time }
+
+    TokenPar:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiraEn: { type: integer, description: Segundos hasta la expiración del token de acceso }
+
+    PaginaCursor:
+      type: object
+      properties:
+        cursorSiguiente: { type: string, nullable: true }
+        total: { type: integer, nullable: true }
+
+    Error:
+      type: object
+      description: Cuerpo de error uniforme (Anexo B)
+      properties:
+        codigo: { type: string, description: Código interno del error }
+        mensaje: { type: string, description: Mensaje orientado al usuario }
+        detalle: { type: string, description: Detalle técnico para diagnóstico, nullable: true }
+
+  responses:
+    ErrorValidacion:
+      description: Error de validación (400)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ErrorAutenticacion:
+      description: Falta de autenticación (401)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ErrorAutorizacion:
+      description: Falta de autorización (403)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ErrorNoEncontrado:
+      description: Recurso inexistente (404)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ErrorConflicto:
+      description: Conflicto de estado (409)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ErrorDependenciaExterna:
+      description: Indisponibilidad de una dependencia externa — circuito abierto en YAuctionsAdapter (503)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

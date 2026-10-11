@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import { readFileSync } from 'node:fs';
+import swaggerUi from 'swagger-ui-express';
+import { parse } from 'yaml';
 
 import { authRouter } from './routes/auth.routes.js';
 import { usuariosRouter } from './routes/usuarios.routes.js';
@@ -12,9 +15,12 @@ import { webhooksRouter } from './routes/webhooks.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
+const openApiDocument = parse(readFileSync(new URL('../../openapi.yaml', import.meta.url), 'utf8'));
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.get('/api/v1/salud', (req, res) => res.json({ ok: true, servicio: 'compralatino-api', version: '1.0.0' }));
 
