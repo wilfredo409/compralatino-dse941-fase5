@@ -11,7 +11,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Se ejecutan SOLO la primera vez (volumen vacío), en orden alfabético:
-      # schema.sql de Fase 2 + las dos migraciones aditivas de Fase 3
+      # schema.sql de Fase 2 + las tres migraciones aditivas de Fase 3
       - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U compralatino -d compralatino"]

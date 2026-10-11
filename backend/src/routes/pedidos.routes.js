@@ -57,12 +57,22 @@ pedidosRouter.post(
       // 'subasta', que solo "reservan" el producto en el pedido: su precio
       // real se define después, cuando se envían las ofertas una a una vía
       // POST /pedidos/{id}/ofertas). Ver supuestos_fase3.md #11.
-      let subtotal = 0;
-      const detallePreparado = [];
       for (const item of items) {
         if (!item.idProducto || !item.cantidad || item.cantidad < 1) {
           throw ErrorValidacion('Cada ítem requiere idProducto y cantidad >= 1');
         }
+      }
+
+      // Bloquea las filas de los productos del pedido, en orden de id, hasta el
+      // COMMIT. Así dos compras simultáneas del mismo producto se serializan
+      // (la segunda ve el stock ya descontado) y, al tomar los bloqueos siempre
+      // en el mismo orden, dos pedidos con varios productos no se interbloquean.
+      const idsProductos = [...new Set(items.map((item) => item.idProducto))];
+      await client.query('SELECT id FROM productos WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE', [idsProductos]);
+
+      let subtotal = 0;
+      const detallePreparado = [];
+      for (const item of items) {
         const { rows: prodRows } = await client.query('SELECT * FROM productos WHERE id = $1', [item.idProducto]);
         if (prodRows.length === 0) throw ErrorNoEncontrado(`Producto ${item.idProducto} no encontrado`);
         const producto = prodRows[0];
@@ -107,7 +117,15 @@ pedidosRouter.post(
           [pedidoCreado.id, item.idProducto, item.cantidad, item.precioUnitario.toFixed(2)]
         );
         if (item.afectaStock) {
-          await client.query('UPDATE productos SET stock = stock - $1 WHERE id = $2', [item.cantidad, item.idProducto]);
+          // Descuento condicional: nunca deja el stock en negativo, aunque
+          // otro proceso lo haya cambiado entre la lectura y esta sentencia.
+          const descuento = await client.query(
+            'UPDATE productos SET stock = stock - $1 WHERE id = $2 AND stock >= $1',
+            [item.cantidad, item.idProducto]
+          );
+          if (descuento.rowCount === 0) {
+            throw ErrorConflicto('Stock insuficiente: otra compra se llevó las últimas unidades', { idProducto: item.idProducto });
+          }
         }
       }
 

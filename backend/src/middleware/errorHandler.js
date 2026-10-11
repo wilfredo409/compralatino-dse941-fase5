@@ -22,6 +22,23 @@ export function errorHandler(err, req, res, _next) {
     });
   }
 
+  // Entradas que PostgreSQL rechaza por formato o por restricción CHECK: son
+  // errores del cliente (400), no fallos del servidor (500).
+  if (err && err.code === '22P02') {
+    return res.status(400).json({
+      codigo: 'ERROR_VALIDACION',
+      mensaje: 'Un identificador o valor no tiene el formato esperado.',
+      detalle: null,
+    });
+  }
+  if (err && err.code === '23514') {
+    return res.status(400).json({
+      codigo: 'ERROR_VALIDACION',
+      mensaje: 'Un valor no cumple las restricciones permitidas.',
+      detalle: err.detail || null,
+    });
+  }
+
   console.error(err);
   return res.status(500).json({
     codigo: 'ERROR_INTERNO',

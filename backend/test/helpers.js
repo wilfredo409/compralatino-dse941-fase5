@@ -23,19 +23,39 @@ export async function crearUsuarioConSesion(request, app, etiqueta) {
   return { id: reg.body.id, email, password, token: login.body.accessToken };
 }
 
-/** Crea una categoría y N productos de venta fija; devuelve { idCategoria, productos: [{id, precioUsd, stock}] }. */
-export async function crearCatalogoDePrueba(pool, etiqueta, { cantidad = 3, precioUsd = 100, stock = 5 } = {}) {
+/** Crea una categoría y N productos (de venta fija por defecto, o 'subasta'); devuelve { idCategoria, productos: [{id, precioUsd, stock}] }. */
+export async function crearCatalogoDePrueba(pool, etiqueta, { cantidad = 3, precioUsd = 100, stock = 5, tipoVenta = 'fijo' } = {}) {
   const cat = await pool.query('INSERT INTO categorias (nombre) VALUES ($1) RETURNING id', [`Prueba ${etiqueta} ${sufijo}`]);
   const productos = [];
   for (let i = 0; i < cantidad; i++) {
     const { rows } = await pool.query(
       `INSERT INTO productos (id_externo_ya, id_categoria, titulo, precio_jpy, precio_usd, tipo_venta, stock)
-       VALUES ($1, $2, $3, $4, $5, 'fijo', $6) RETURNING id`,
-      [`TEST-${etiqueta}-${sufijo}-${i}`, cat.rows[0].id, `Producto de prueba ${etiqueta} ${i}`, precioUsd * 150, precioUsd, stock]
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+      [`TEST-${etiqueta}-${sufijo}-${i}`, cat.rows[0].id, `Producto de prueba ${etiqueta} ${i}`, precioUsd * 150, precioUsd, tipoVenta, stock]
     );
-    productos.push({ id: rows[0].id, precioUsd, stock });
+    productos.push({ id: rows[0].id, precioUsd, stock, titulo: `Producto de prueba ${etiqueta} ${i}` });
   }
   return { idCategoria: cat.rows[0].id, productos };
+}
+
+/** Da el rol «administrador» (M5) a un usuario; crea el rol si la base aún no tiene el seed. */
+export async function otorgarRolAdministrador(pool, idUsuario) {
+  await pool.query(
+    "INSERT INTO roles (nombre, descripcion) VALUES ('administrador', 'Gestión y monitoreo (M5)') ON CONFLICT (nombre) DO NOTHING"
+  );
+  await pool.query(
+    `INSERT INTO usuario_rol (id_usuario, id_rol)
+     SELECT $1, id FROM roles WHERE nombre = 'administrador' ON CONFLICT DO NOTHING`,
+    [idUsuario]
+  );
+}
+
+/** Quita el rol «administrador» solo si lo creó la prueba y ya nadie lo usa (así no choca con `npm run seed` en una base vacía). */
+export async function retirarRolAdministradorSiSobra(pool) {
+  await pool.query(
+    `DELETE FROM roles WHERE nombre = 'administrador'
+       AND NOT EXISTS (SELECT 1 FROM usuario_rol ur WHERE ur.id_rol = roles.id)`
+  );
 }
 
 export async function crearDireccion(pool, idUsuario) {
