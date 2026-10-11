@@ -21,7 +21,9 @@ services:
     # Sin "ports": la base de datos NO se expone fuera de la red de Docker
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     depends_on:
       db:
