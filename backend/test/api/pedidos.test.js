@@ -6,7 +6,7 @@ import request from 'supertest';
 import { app } from '../../src/app.js';
 import { pool } from '../../src/config/db.js';
 
-let usuario, otro, catalogo, idDireccion;
+let usuario, otro, catalogo, idDireccion, concurrencia;
 const auth = (u) => ({ Authorization: `Bearer ${u.token}` });
 
 before(async () => {
@@ -18,7 +18,10 @@ before(async () => {
 });
 
 after(async () => {
-  if (!SIN_BD) await limpiar(pool, { idsUsuario: [usuario?.id, otro?.id].filter(Boolean), idCategoria: catalogo?.idCategoria });
+  if (!SIN_BD) {
+    await limpiar(pool, { idsUsuario: [usuario?.id, otro?.id].filter(Boolean), idCategoria: catalogo?.idCategoria });
+    await limpiar(pool, { idCategoria: concurrencia?.idCategoria });
+  }
   await pool.end();
 });
 
@@ -130,4 +133,56 @@ test('webhook de pagos: «capturado» mueve el pedido pagado a «en_proceso»', 
   assert.equal(res.status, 200);
   const { rows } = await pool.query('SELECT estado FROM pedidos WHERE id = $1', [creado.body.id]);
   assert.equal(rows[0].estado, 'en_proceso');
+});
+
+test('compras simultáneas del mismo producto: el stock nunca queda en negativo ni se vende de más', { skip: SIN_BD }, async () => {
+  concurrencia = await crearCatalogoDePrueba(pool, 'concurrencia', { cantidad: 1, precioUsd: 10, stock: 2 });
+  const [p] = concurrencia.productos;
+
+  // Cinco clientes piden 1 unidad a la vez de un producto que solo tiene 2.
+  const respuestas = await Promise.all(
+    Array.from({ length: 5 }, () => request(app).post('/api/v1/pedidos').set(auth(usuario))
+      .send({ idDireccion, items: [{ idProducto: p.id, cantidad: 1 }] }))
+  );
+  const estados = respuestas.map((r) => r.status).sort();
+  assert.deepEqual(estados, [201, 201, 409, 409, 409], 'solo se atienden tantas compras como unidades había');
+
+  const { rows } = await pool.query('SELECT stock FROM productos WHERE id = $1', [p.id]);
+  assert.equal(rows[0].stock, 0);
+  const vendidas = await pool.query('SELECT COALESCE(SUM(cantidad), 0)::int AS n FROM pedido_detalle WHERE id_producto = $1', [p.id]);
+  assert.equal(vendidas.rows[0].n, 2, 'los pedidos rechazados no dejan líneas de detalle (rollback completo)');
+});
+
+test('la base de datos rechaza un stock negativo aunque falle la lógica de la aplicación', { skip: SIN_BD }, async () => {
+  const [p] = catalogo.productos;
+  await assert.rejects(pool.query('UPDATE productos SET stock = -1 WHERE id = $1', [p.id]), { code: '23514' });
+});
+
+test('compra: un identificador de producto mal formado responde 400, no 500', { skip: SIN_BD }, async () => {
+  const res = await request(app).post('/api/v1/pedidos').set(auth(usuario))
+    .send({ idDireccion, items: [{ idProducto: 'no-es-un-uuid', cantidad: 1 }] });
+  assert.equal(res.status, 400);
+  assert.equal(res.body.codigo, 'ERROR_VALIDACION');
+});
+
+test('compra: un producto inexistente responde 404 y no crea el pedido', { skip: SIN_BD }, async () => {
+  const antes = await pool.query('SELECT COUNT(*)::int AS n FROM pedidos WHERE id_usuario = $1', [usuario.id]);
+  const res = await request(app).post('/api/v1/pedidos').set(auth(usuario))
+    .send({ idDireccion, items: [{ idProducto: '00000000-0000-0000-0000-000000000000', cantidad: 1 }] });
+  assert.equal(res.status, 404);
+  const despues = await pool.query('SELECT COUNT(*)::int AS n FROM pedidos WHERE id_usuario = $1', [usuario.id]);
+  assert.equal(despues.rows[0].n, antes.rows[0].n);
+});
+
+test('webhook de pagos: un estado de pago desconocido responde 400, no 500', { skip: SIN_BD }, async () => {
+  const [, p2] = catalogo.productos;
+  const creado = await request(app).post('/api/v1/pedidos').set(auth(usuario))
+    .send({ idDireccion, items: [{ idProducto: p2.id, cantidad: 1 }] });
+  await request(app).post(`/api/v1/pedidos/${creado.body.id}/pago`).set(auth(usuario))
+    .send({ proveedor: 'demo-gateway', tokenPago: 'tok_estado_raro' });
+
+  const cuerpo = { idPedido: creado.body.id, estadoPago: 'inventado' };
+  const res = await request(app).post('/api/v1/webhooks/pagos').set('x-signature', firmar(cuerpo)).send(cuerpo);
+  assert.equal(res.status, 400);
+  assert.equal(res.body.codigo, 'ERROR_VALIDACION');
 });

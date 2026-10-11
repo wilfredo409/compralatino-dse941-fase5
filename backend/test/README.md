@@ -3,7 +3,8 @@
 Usan el ejecutor integrado de Node.js (`node:test`) y `supertest`; no hay que instalar nada más que las dependencias del backend (`npm ci`).
 
 ```
-npm test
+npm test                 # corre todas las pruebas
+npm run test:coverage    # igual, y falla si la cobertura de líneas del código fuente baja de 80 %
 ```
 
 ## Qué cubren
@@ -15,6 +16,12 @@ npm test
 | `api/` | `auth.test.js` | Registro, login, refresh, rutas protegidas y que un cliente no entre al panel de administración. |
 | `api/` | `pedidos.test.js` | Compra directa (subtotal, flete de 12 USD, comisión de 5 %, stock), pago, webhook de pagos (capturado/rechazado) y aislamiento entre usuarios. |
 | `api/` | `recomendaciones.test.js` | Los tres niveles de la cascada: tendencia general, navegación y compras; exclusión de lo ya comprado. |
+| `api/` | `admin.test.js` | RF-05: acceso 401/403, métricas, pedidos paginados y filtrados, exportación CSV, listado y edición de usuarios, suspensión (el usuario suspendido pierde el acceso) y bitácora de auditoría. |
+| `api/` | `catalogo.test.js` | Catálogo: filtros por categoría, precio, texto y tipo de venta, paginación por cursor, ficha de producto, errores 400/404 y árbol de categorías. |
+| `api/` | `usuarios.test.js` | Perfil y direcciones: autenticación, validaciones, reemplazo de direcciones y reversión atómica ante una dirección inválida. |
+| `api/` | `subasta.test.js` | Subasta de punta a punta: reserva en el pedido, validación de ofertas, 503 con circuito de YAuctions fallando sin guardar la puja y puja exitosa. |
+
+Además, `pedidos.test.js` incluye la prueba de concurrencia (5 compras simultáneas con stock 2: solo 2 se aceptan, el resto recibe 409) y verifica que la restricción `CHECK (stock >= 0)` de la base de datos rechaza un stock negativo.
 
 ## Pruebas que necesitan base de datos
 

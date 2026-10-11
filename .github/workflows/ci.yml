@@ -41,8 +41,8 @@ jobs:
         run: find src db -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Cargar el esquema de la base de datos (Fase 2 + migraciones)
         run: for f in ../deploy/db-init/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"; done
-      - name: Pruebas automatizadas (unitarias y de API)
-        run: npm test
+      - name: Pruebas automatizadas con cobertura minima (unitarias y de API)
+        run: npm run test:coverage
 
   frontend:
     name: Frontend (construccion)

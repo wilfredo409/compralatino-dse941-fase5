@@ -23,11 +23,15 @@ createdb compralatino   # o usa el gestor gráfico que prefieran
 psql -d compralatino -f "../fase 2/schema.sql"     # schema.sql de Fase 2, sin tocar (ejecutar desde tareas/fase 3/)
 psql -d compralatino -f codigo/backend/db/migrations/001_pedido_codigo_seq.sql
 psql -d compralatino -f codigo/backend/db/migrations/002_fix_usuarios_estado_length.sql
+psql -d compralatino -f codigo/backend/db/migrations/003_check_stock_no_negativo.sql
 ```
 
-Las dos migraciones son aditivas (no alteran nada de lo ya entregado en
+Las tres migraciones son aditivas (no alteran nada de lo ya entregado en
 Fase 2 salvo un defecto real que encontramos al probar, ver
-`supuestos_fase3.md` #10).
+`supuestos_fase3.md` #10, y una restricción `CHECK (stock >= 0)` que protege
+el inventario). Con Docker Compose se aplican solas, pero **solo al crear el
+volumen de la base de datos**: si ya tenías uno de antes, ejecuta la 003 a mano
+o recréalo con `docker compose down -v`.
 
 ## 3. Backend
 
