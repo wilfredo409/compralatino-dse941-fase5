@@ -91,11 +91,11 @@ adminRouter.get(
     const params = [];
     let i = 1;
     if (estado) { condiciones.push(`estado = $${i++}`); params.push(estado); }
-    if (cursor) { condiciones.push(`(fecha_creacion, id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
+    if (cursor) { condiciones.push(`(date_trunc('milliseconds', fecha_creacion), id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
     const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
 
     const { rows } = await query(
-      `SELECT * FROM pedidos ${where} ORDER BY fecha_creacion DESC, id DESC LIMIT $${i}`,
+      `SELECT * FROM pedidos ${where} ORDER BY date_trunc('milliseconds', fecha_creacion) DESC, id DESC LIMIT $${i}`,
       [...params, limite + 1]
     );
     const hayMas = rows.length > limite;
@@ -155,12 +155,12 @@ adminRouter.get(
     const condiciones = [];
     const params = [];
     let i = 1;
-    if (cursor) { condiciones.push(`(fecha_registro, id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
+    if (cursor) { condiciones.push(`(date_trunc('milliseconds', fecha_registro), id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
     const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
 
     const { rows } = await query(
       `SELECT id, email, nombre, apellido, telefono, estado, fecha_registro FROM usuarios
-       ${where} ORDER BY fecha_registro DESC, id DESC LIMIT $${i}`,
+       ${where} ORDER BY date_trunc('milliseconds', fecha_registro) DESC, id DESC LIMIT $${i}`,
       [...params, limite + 1]
     );
     const hayMas = rows.length > limite;
@@ -213,12 +213,12 @@ adminRouter.get(
     const condiciones = [];
     const params = [];
     let i = 1;
-    if (cursor) { condiciones.push(`(fecha, id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
+    if (cursor) { condiciones.push(`(date_trunc('milliseconds', fecha), id) < ($${i++}, $${i++})`); params.push(cursor.o, cursor.id); }
     const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
 
     const { rows } = await query(
       `SELECT id, id_usuario, accion, entidad, id_entidad, fecha FROM auditoria
-       ${where} ORDER BY fecha DESC, id DESC LIMIT $${i}`,
+       ${where} ORDER BY date_trunc('milliseconds', fecha) DESC, id DESC LIMIT $${i}`,
       [...params, limite + 1]
     );
     const hayMas = rows.length > limite;

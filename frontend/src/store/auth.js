@@ -6,6 +6,7 @@ import { api } from '../api.js';
 // sobrevivir a un refresh de página.
 export const sesion = reactive({
   usuario: null,
+  esAdmin: false,
   cargando: true,
 });
 
@@ -16,6 +17,7 @@ export async function restaurarSesion() {
   }
   try {
     sesion.usuario = await api.get('/usuarios/me');
+    sesion.esAdmin = await esAdmin();
   } catch {
     cerrarSesion();
   } finally {
@@ -28,6 +30,7 @@ export async function iniciarSesion(email, password) {
   localStorage.setItem('accessToken', tokens.accessToken);
   localStorage.setItem('refreshToken', tokens.refreshToken);
   sesion.usuario = await api.get('/usuarios/me');
+  sesion.esAdmin = await esAdmin();
 }
 
 export async function registrarse(datos) {
@@ -39,6 +42,7 @@ export function cerrarSesion() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   sesion.usuario = null;
+  sesion.esAdmin = false;
 }
 
 export async function esAdmin() {

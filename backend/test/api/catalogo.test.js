@@ -71,6 +71,27 @@ test('catálogo: pagina por cursor sin repetir ni omitir productos', { skip: SIN
   assert.deepEqual([...vistos].sort(), fijos.productos.map((p) => p.id).sort());
 });
 
+test('catálogo: el cursor no pierde productos con el mismo instante en microsegundos', { skip: SIN_BD }, async () => {
+  // Regresión: el cursor viaja por un Date de JS (milisegundos) y la BD guarda
+  // microsegundos; un lote insertado en una sola transacción (p. ej. el seed)
+  // comparte timestamp y la segunda página salía vacía.
+  await pool.query(
+    "UPDATE productos SET fecha_sincronizacion = '2026-01-01 10:00:00.123987+00' WHERE id_categoria = $1",
+    [fijos.idCategoria]
+  );
+  const vistos = [];
+  let cursor = null;
+  for (let pagina = 0; pagina < 5; pagina++) {
+    const url = `/api/v1/productos?categoria=${fijos.idCategoria}&limite=1${cursor ? `&cursor=${cursor}` : ''}`;
+    const res = await request(app).get(url);
+    assert.equal(res.status, 200);
+    vistos.push(...res.body.items.map((p) => p.id));
+    cursor = res.body.cursorSiguiente;
+    if (!cursor) break;
+  }
+  assert.deepEqual([...vistos].sort(), fijos.productos.map((p) => p.id).sort());
+});
+
 test('ficha de producto: devuelve el detalle con sus imágenes', { skip: SIN_BD }, async () => {
   const res = await request(app).get(`/api/v1/productos/${fijos.productos[0].id}`);
   assert.equal(res.status, 200);
