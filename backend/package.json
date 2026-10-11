@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "CompraLatino — API REST (Fase 3, DSE941). Backend Node.js + Express sobre el contrato openapi.yaml y el esquema schema.sql de Fase 2.",
   "type": "module",
+  "engines": { "node": ">=22" },
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node db/seed.js",
-    "test": "node --test"
+    "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

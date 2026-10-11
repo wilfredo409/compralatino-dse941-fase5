@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CompraLatino — SPA Vue.js 3 (Fase 3, DSE941). Consume la API del backend sobre el contrato openapi.yaml.",
   "type": "module",
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

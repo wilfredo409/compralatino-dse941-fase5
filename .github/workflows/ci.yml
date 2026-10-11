@@ -1,0 +1,69 @@
+name: CI
+
+# Se ejecuta en cada pull request y en cada push a main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (sintaxis y pruebas)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgres://compralatino:pruebas@localhost:5432/compralatino
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: compralatino
+          POSTGRES_PASSWORD: pruebas
+          POSTGRES_DB: compralatino
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U compralatino -d compralatino"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc   # Node.js 22 LTS, la misma version del equipo
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Verificar la sintaxis de todos los archivos JavaScript
+        run: find src db -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Cargar el esquema de la base de datos (Fase 2 + migraciones)
+        run: for f in ../deploy/db-init/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"; done
+      - name: Pruebas automatizadas (unitarias y de API)
+        run: npm test
+
+  frontend:
+    name: Frontend (construccion)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - run: npm run build
+
+  docker:
+    name: Imagenes Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t compralatino-backend ./backend
+      - run: docker build -t compralatino-frontend ./frontend
