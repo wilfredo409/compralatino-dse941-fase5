@@ -65,5 +65,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t compralatino-backend ./backend
+      - run: docker build -f backend/Dockerfile -t compralatino-backend .
       - run: docker build -t compralatino-frontend ./frontend
