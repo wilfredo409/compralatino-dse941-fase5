@@ -78,6 +78,7 @@ function idExterno() {
 
 async function main() {
   console.log('Sembrando datos de demostración de CompraLatino (Fase 3)...');
+  const fechaActual = Date.now();
 
   await withTransaction(async (client) => {
     // Idempotencia simple: si ya hay categorías, no volver a sembrar.
@@ -117,7 +118,7 @@ async function main() {
       for (const p of lista) {
         const precioUsd = tasaAUsd(p.jpy);
         const fechaFinSubasta = p.tipoVenta === 'subasta'
-          ? new Date(Date.now() + (2 + Math.random() * 96) * 3600 * 1000) // 2h a 4 días
+          ? new Date(fechaActual + (2 + Math.random() * 96) * 3600 * 1000) // 2h a 4 días desde la siembra
           : null;
         const { rows } = await client.query(
           `INSERT INTO productos (id_externo_ya, id_categoria, titulo, descripcion, precio_jpy, precio_usd, tipo_venta, fecha_fin_subasta, stock)
@@ -230,17 +231,48 @@ async function main() {
     }
 
     // Pujas históricas resueltas, para que "éxito de ofertas" no salga vacío
-    const { rows: subastas } = await client.query("SELECT id FROM productos WHERE tipo_venta = 'subasta' LIMIT 4");
+    // Laura compra en Relojería y Coleccionables; estas categorías alimentan
+    // sus recomendaciones personalizadas incluso al recrear el catálogo.
+    const idsProductosParaPujas = [
+      ...(productosPorCategoria['Relojería'] || []),
+      ...(productosPorCategoria['Coleccionables'] || []),
+    ];
+    const { rows: subastasRows } = await client.query(
+      `SELECT id FROM productos
+       WHERE tipo_venta = 'subasta' AND id = ANY($1::uuid[])`,
+      [idsProductosParaPujas]
+    );
+    const idsSubastas = new Set(subastasRows.map((row) => row.id));
+    const subastas = idsProductosParaPujas.filter((id) => idsSubastas.has(id));
     const estadosDemo = ['aceptada', 'aceptada', 'rechazada', 'superada'];
     for (let idx = 0; idx < subastas.length; idx++) {
+      const montoJpy = 10000 + idx * 500;
+      const precioUsd = tasaAUsd(montoJpy);
+      const subtotal = precioUsd;
+      const flete = 12;
+      const comision = Math.round(subtotal * 0.05 * 100) / 100;
+      const total = Math.round((subtotal + flete + comision) * 100) / 100;
       const pedidoDePuja = await client.query(
         `INSERT INTO pedidos (codigo, id_usuario, id_direccion, estado, subtotal_usd, flete_usd, comision_usd, total_usd)
-         VALUES ($1,$2,$3,'en_proceso',0,0,0,0) RETURNING id`,
-        [`CL-${new Date().getFullYear()}-${String(9000 + idx).padStart(4, '0')}`, laura, dirLaura[0].id]
+         VALUES ($1,$2,$3,'en_proceso',$4,$5,$6,$7) RETURNING id`,
+        [
+          `CL-${new Date().getFullYear()}-${String(9000 + idx).padStart(4, '0')}`,
+          laura,
+          dirLaura[0].id,
+          subtotal.toFixed(2),
+          flete.toFixed(2),
+          comision.toFixed(2),
+          total.toFixed(2),
+        ]
+      );
+      await client.query(
+        `INSERT INTO pedido_detalle (id_pedido, id_producto, cantidad, precio_unitario_usd)
+         VALUES ($1,$2,1,$3)`,
+        [pedidoDePuja.rows[0].id, subastas[idx], precioUsd.toFixed(2)]
       );
       await client.query(
         `INSERT INTO pujas (id_pedido, id_producto, monto_jpy, estado) VALUES ($1,$2,$3,$4)`,
-        [pedidoDePuja.rows[0].id, subastas[idx].id, 10000 + idx * 500, estadosDemo[idx]]
+        [pedidoDePuja.rows[0].id, subastas[idx], montoJpy, estadosDemo[idx]]
       );
     }
 
