@@ -8,7 +8,12 @@ const productos = ref([]);
 const categorias = ref([]);
 const recomendaciones = ref([]);
 const cargando = ref(true);
+const cargandoMas = ref(false);
+const cursorSiguiente = ref(null);
 const error = ref('');
+// Descarta respuestas de peticiones antiguas si el usuario cambia de filtro
+// mientras hay una carga en curso.
+let peticionActual = 0;
 
 const filtros = ref({ categoria: '', tipoVenta: '', q: '' });
 
@@ -16,20 +21,46 @@ function aplanarCategorias(nodos, nivel = 0) {
   return nodos.flatMap((n) => [{ ...n, nivel }, ...aplanarCategorias(n.subcategorias || [], nivel + 1)]);
 }
 
+function parametrosBusqueda(cursor) {
+  const params = new URLSearchParams();
+  if (filtros.value.categoria) params.set('categoria', filtros.value.categoria);
+  if (filtros.value.tipoVenta) params.set('tipoVenta', filtros.value.tipoVenta);
+  if (filtros.value.q) params.set('q', filtros.value.q);
+  if (cursor) params.set('cursor', cursor);
+  return params.toString();
+}
+
 async function cargarProductos() {
+  const miPeticion = ++peticionActual;
   cargando.value = true;
+  cargandoMas.value = false;
   error.value = '';
   try {
-    const params = new URLSearchParams();
-    if (filtros.value.categoria) params.set('categoria', filtros.value.categoria);
-    if (filtros.value.tipoVenta) params.set('tipoVenta', filtros.value.tipoVenta);
-    if (filtros.value.q) params.set('q', filtros.value.q);
-    const data = await api.get(`/productos?${params.toString()}`);
+    const data = await api.get(`/productos?${parametrosBusqueda()}`);
+    if (miPeticion !== peticionActual) return;
     productos.value = data.items;
+    cursorSiguiente.value = data.cursorSiguiente || null;
   } catch (e) {
+    if (miPeticion !== peticionActual) return;
     error.value = e.message;
   } finally {
-    cargando.value = false;
+    if (miPeticion === peticionActual) cargando.value = false;
+  }
+}
+
+async function verMas() {
+  if (!cursorSiguiente.value || cargandoMas.value) return;
+  const miPeticion = peticionActual;
+  cargandoMas.value = true;
+  try {
+    const data = await api.get(`/productos?${parametrosBusqueda(cursorSiguiente.value)}`);
+    if (miPeticion !== peticionActual) return;
+    productos.value = [...productos.value, ...data.items];
+    cursorSiguiente.value = data.cursorSiguiente || null;
+  } catch (e) {
+    if (miPeticion === peticionActual) error.value = e.message;
+  } finally {
+    if (miPeticion === peticionActual) cargandoMas.value = false;
   }
 }
 
@@ -84,5 +115,8 @@ watch(filtros, cargarProductos, { deep: true });
   <p v-else-if="!productos.length">No hay productos que coincidan con los filtros.</p>
   <div v-else class="rejilla">
     <ProductoCard v-for="p in productos" :key="p.id" :producto="p" />
+  </div>
+  <div v-if="!error && !cargando && cursorSiguiente" style="text-align:center;margin:20px 0">
+    <button :disabled="cargandoMas" @click="verMas">{{ cargandoMas ? 'Cargando…' : 'Ver más productos' }}</button>
   </div>
 </template>

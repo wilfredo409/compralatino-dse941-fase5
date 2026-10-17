@@ -147,13 +147,13 @@ pedidosRouter.get(
     const params = [req.usuario.id];
     let i = 2;
     if (cursor) {
-      condiciones.push(`(fecha_creacion, id) < ($${i++}, $${i++})`);
+      condiciones.push(`(date_trunc('milliseconds', fecha_creacion), id) < ($${i++}, $${i++})`);
       params.push(cursor.o, cursor.id);
     }
 
     const { rows } = await query(
       `SELECT * FROM pedidos WHERE ${condiciones.join(' AND ')}
-       ORDER BY fecha_creacion DESC, id DESC LIMIT $${i}`,
+       ORDER BY date_trunc('milliseconds', fecha_creacion) DESC, id DESC LIMIT $${i}`,
       [...params, limite + 1]
     );
     const hayMas = rows.length > limite;

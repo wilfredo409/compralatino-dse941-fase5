@@ -16,7 +16,7 @@ function salir() {
       <nav>
         <RouterLink to="/" active-class="activo">Catálogo</RouterLink>
         <RouterLink v-if="sesion.usuario" to="/mis-pedidos" active-class="activo">Mis pedidos</RouterLink>
-      <RouterLink v-if="sesion.usuario && sesion.usuario.rol === 'admin'" to="/admin" active-class="activo">Administración</RouterLink>
+        <RouterLink v-if="sesion.esAdmin" to="/admin" active-class="activo">Administración</RouterLink>
         <template v-if="sesion.usuario">
           <span>{{ sesion.usuario.nombre }}</span>
           <button @click="salir">Salir</button>

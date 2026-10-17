@@ -40,14 +40,14 @@ productosRouter.get(
     if (precioMax) { condiciones.push(`precio_usd <= $${i++}`); params.push(Number(precioMax)); }
     if (q) { condiciones.push(`titulo ILIKE $${i++}`); params.push(`%${q}%`); }
     if (cursor) {
-      condiciones.push(`(fecha_sincronizacion, id) < ($${i++}, $${i++})`);
+      condiciones.push(`(date_trunc('milliseconds', fecha_sincronizacion), id) < ($${i++}, $${i++})`);
       params.push(cursor.o, cursor.id);
     }
 
     const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
     const { rows } = await query(
       `SELECT * FROM productos ${where}
-       ORDER BY fecha_sincronizacion DESC, id DESC
+       ORDER BY date_trunc('milliseconds', fecha_sincronizacion) DESC, id DESC
        LIMIT $${i}`,
       [...params, limite + 1]
     );
