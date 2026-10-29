@@ -31,6 +31,13 @@ authRouter.post(
       throw ErrorValidacion('La contraseña debe tener al menos 8 caracteres');
     }
 
+    if (typeof nombre !== 'string') {
+       throw ErrorValidacion('El nombre debe ser texto');
+    }
+
+    if (nombre.length > 80) {
+       throw ErrorValidacion('El nombre no puede superar 80 caracteres');
+    }
     const { rows: existentes } = await query('SELECT id FROM usuarios WHERE email = $1', [email]);
     if (existentes.length > 0) throw ErrorConflicto('Ya existe una cuenta con ese correo');
 
