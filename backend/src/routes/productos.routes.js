@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { query } from '../config/db.js';
+import {
+  listarProductos,
+  buscarProductoPorId,
+  listarImagenesProducto,
+} from '../repositories/productos.repository.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { ErrorNoEncontrado } from '../utils/errors.js';
 import { limiteDesdeQuery, decodificarCursor, codificarCursor } from '../utils/pagination.js';
@@ -30,27 +34,15 @@ productosRouter.get(
     const limite = limiteDesdeQuery(req.query);
     const cursor = decodificarCursor(req.query.cursor);
 
-    const condiciones = [];
-    const params = [];
-    let i = 1;
-
-    if (categoria) { condiciones.push(`id_categoria = $${i++}`); params.push(Number(categoria)); }
-    if (tipoVenta) { condiciones.push(`tipo_venta = $${i++}`); params.push(tipoVenta); }
-    if (precioMin) { condiciones.push(`precio_usd >= $${i++}`); params.push(Number(precioMin)); }
-    if (precioMax) { condiciones.push(`precio_usd <= $${i++}`); params.push(Number(precioMax)); }
-    if (q) { condiciones.push(`titulo ILIKE $${i++}`); params.push(`%${q}%`); }
-    if (cursor) {
-      condiciones.push(`(date_trunc('milliseconds', fecha_sincronizacion), id) < ($${i++}, $${i++})`);
-      params.push(cursor.o, cursor.id);
-    }
-
-    const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
-    const { rows } = await query(
-      `SELECT * FROM productos ${where}
-       ORDER BY date_trunc('milliseconds', fecha_sincronizacion) DESC, id DESC
-       LIMIT $${i}`,
-      [...params, limite + 1]
-    );
+    const rows = await listarProductos({
+  categoria,
+  tipoVenta,
+  precioMin,
+  precioMax,
+  q,
+  cursor,
+  limite,
+	});
 
     const hayMas = rows.length > limite;
     const pagina = rows.slice(0, limite);
@@ -68,13 +60,14 @@ productosRouter.get(
 productosRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT * FROM productos WHERE id = $1', [req.params.id]);
-    if (rows.length === 0) throw ErrorNoEncontrado('Producto no encontrado');
+    const producto = await buscarProductoPorId(req.params.id);
+    if (!producto) {
+      throw ErrorNoEncontrado('Producto no encontrado');
+    }
 
-    const { rows: imgs } = await query(
-      'SELECT url_blob FROM producto_imagenes WHERE id_producto = $1 ORDER BY orden',
-      [req.params.id]
+    const imgs = await listarImagenesProducto(req.params.id);
+    res.json(
+      serializarProducto(producto, imgs.map((i) => i.url_blob))
     );
-    res.json(serializarProducto(rows[0], imgs.map((i) => i.url_blob)));
   })
 );

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query } from '../config/db.js';
+import { listarCategorias } from '../repositories/categorias.repository.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 export const categoriasRouter = Router();
@@ -8,7 +8,7 @@ export const categoriasRouter = Router();
 categoriasRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { rows } = await query('SELECT id, nombre, id_padre FROM categorias ORDER BY id');
+    const  rows  = await listarCategorias();
     const porId = new Map(rows.map((r) => [r.id, { id: r.id, nombre: r.nombre, idPadre: r.id_padre, subcategorias: [] }]));
     const raices = [];
     for (const r of rows) {
