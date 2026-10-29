@@ -4,7 +4,7 @@ defineProps({ producto: { type: Object, required: true } });
 </script>
 
 <template>
-  <RouterLink :to="`/productos/${producto.id}`" class="tarjeta" style="text-decoration:none;color:inherit;display:block">
+  <RouterLink :to="`/productos/${producto.id}`" class="tarjeta" style="text-decoration:none;color:inherit">
     <img :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)" :alt="producto.titulo" />
     <h3>{{ producto.titulo }}</h3>
     <div class="precio">USD {{ producto.precioUsd?.toFixed(2) ?? '—' }}</div>
