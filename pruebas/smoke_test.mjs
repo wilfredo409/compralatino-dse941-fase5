@@ -7,12 +7,43 @@ import path from 'path';
 // Para usar un Chromium propio: CHROMIUM_PATH=/ruta/al/chromium node smoke_test.mjs
 const BASE = process.env.BASE_URL || 'http://localhost:5173';
 const CAPTURAS = os.tmpdir();
+const CLIENTE_EMAIL = process.env.SMOKE_CLIENT_EMAIL;
+const CLIENTE_PASSWORD = process.env.SMOKE_CLIENT_PASSWORD;
+const ADMIN_EMAIL = process.env.SMOKE_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.SMOKE_ADMIN_PASSWORD;
+
+for (const [nombre, valor] of Object.entries({
+  SMOKE_CLIENT_EMAIL: CLIENTE_EMAIL,
+  SMOKE_CLIENT_PASSWORD: CLIENTE_PASSWORD,
+  SMOKE_ADMIN_EMAIL: ADMIN_EMAIL,
+  SMOKE_ADMIN_PASSWORD: ADMIN_PASSWORD,
+})) {
+  if (!valor) throw new Error(`Falta configurar la variable de entorno ${nombre}`);
+}
 
 const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), headless: true });
 const page = await browser.newPage();
 const errores = [];
+const respuestasHttpEsperadas = new Map();
 page.on('pageerror', (e) => errores.push(String(e)));
-page.on('console', (msg) => { if (msg.type() === 'error') errores.push(msg.text()); });
+page.on('response', (response) => {
+  const ruta = new URL(response.url()).pathname;
+  const estado = response.status();
+  const esperada = (estado === 401 && ruta === '/api/v1/auth/login')
+    || (estado === 403 && ruta === '/api/v1/admin/metricas')
+    || (estado === 404 && ruta === '/api/v1/productos/00000000-0000-4000-8000-000000000000');
+  if (esperada) respuestasHttpEsperadas.set(estado, (respuestasHttpEsperadas.get(estado) || 0) + 1);
+});
+page.on('console', (msg) => {
+  if (msg.type() !== 'error') return;
+  const estado = Number(msg.text().match(/status of (\d{3})/)?.[1]);
+  const cantidad = respuestasHttpEsperadas.get(estado) || 0;
+  if (cantidad) {
+    respuestasHttpEsperadas.set(estado, cantidad - 1);
+    return;
+  }
+  errores.push(msg.text());
+});
 
 await page.route('**://*.google.com/**', (route) => route.abort());
 await page.route('**://*.googleapis.com/**', (route) => route.abort());
@@ -36,15 +67,51 @@ await paso('cargar catálogo (home)', async () => {
   await page.waitForSelector('.tarjeta', { timeout: 5000 });
 });
 
+await paso('ruta protegida sin sesión redirige a ingresar', async () => {
+  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + '/mis-pedidos', { waitUntil: 'networkidle' });
+  await page.waitForURL('**/ingresar**', { timeout: 5000 });
+  const destino = new URL(page.url()).searchParams.get('redirigirA');
+  if (destino !== '/mis-pedidos') throw new Error(`destino de redirección inesperado: ${destino}`);
+});
+
+await paso('login con credenciales inválidas muestra error', async () => {
+  await page.fill('input[type=email]', `smoke-invalido-${Date.now()}@invalid.example`);
+  await page.fill('input[type=password]', 'NoEsUnaClaveValida-123');
+  await page.click('button:has-text("Ingresar")');
+  const error = page.locator('.alerta.error');
+  await error.waitFor({ state: 'visible', timeout: 5000 });
+  if (!(await error.innerText()).trim()) throw new Error('el mensaje de error está vacío');
+});
+
+await paso('búsqueda sin resultados muestra estado vacío', async () => {
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+  await page.fill('.filtros input', `smoke-sin-resultados-${Date.now()}`);
+  await page.waitForSelector('text=No hay productos que coincidan con los filtros.', { timeout: 5000 });
+});
+
+await paso('producto inexistente muestra mensaje', async () => {
+  await page.goto(BASE + '/productos/00000000-0000-4000-8000-000000000000', { waitUntil: 'networkidle' });
+  await page.waitForSelector('text=Producto no encontrado', { timeout: 5000 });
+});
+
 await paso('login como cliente demo', async () => {
-  await page.click('text=Ingresar');
-  await page.fill('input[type=email]', 'laura.pineda@demo.compralatino.com');
-  await page.fill('input[type=password]', 'Demo1234!');
+  await page.goto(BASE + '/ingresar', { waitUntil: 'networkidle' });
+  await page.fill('input[type=email]', CLIENTE_EMAIL);
+  await page.fill('input[type=password]', CLIENTE_PASSWORD);
   await page.click('button:has-text("Ingresar")');
   await page.waitForSelector('text=Recomendado para ti', { timeout: 5000 });
 });
 
+await paso('cliente no accede a /admin', async () => {
+  await page.goto(BASE + '/admin', { waitUntil: 'networkidle' });
+  await page.waitForSelector('text=Tu cuenta no tiene el rol de administrador', { timeout: 5000 });
+  if (await page.locator('.kpi').count()) throw new Error('se mostraron métricas administrativas a un cliente');
+});
+
 await paso('ver recomendaciones con motivo', async () => {
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+  await page.waitForSelector('text=Recomendado para ti', { timeout: 5000 });
   const motivo = await page.textContent('.rejilla >> nth=0 >> .. >> div >> nth=-1');
   if (!motivo) throw new Error('no se encontró texto de motivo de recomendación');
 });
@@ -75,8 +142,8 @@ await paso('ver el pedido reflejado en Mis pedidos', async () => {
 await paso('cerrar sesión y entrar como admin', async () => {
   await page.click('text=Salir');
   await page.click('text=Ingresar');
-  await page.fill('input[type=email]', 'admin@compralatino.com');
-  await page.fill('input[type=password]', 'Admin1234!');
+  await page.fill('input[type=email]', ADMIN_EMAIL);
+  await page.fill('input[type=password]', ADMIN_PASSWORD);
   await page.click('button:has-text("Ingresar")');
   await page.waitForSelector('.tarjeta', { timeout: 5000 });
 });

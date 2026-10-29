@@ -99,6 +99,10 @@ const requiereSesion = computed(() => !sesion.usuario);
 
 <template>
   <p v-if="cargando">Cargando producto…</p>
+  <div v-else-if="error" class="alerta error">
+    {{ error }}
+    <p><RouterLink to="/">Volver al catálogo</RouterLink></p>
+  </div>
   <div v-else-if="producto">
     <RouterLink to="/">&larr; Volver al catálogo</RouterLink>
     <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:14px">
