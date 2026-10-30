@@ -24,18 +24,18 @@ async function enviar() {
 
 <template>
   <h2>Crear cuenta</h2>
-  <div v-if="error" class="alerta error">{{ error }}</div>
+  <div v-if="error" class="alerta error" role="alert">{{ error }}</div>
   <form class="form" @submit.prevent="enviar">
-    <label>Nombre</label>
-    <input v-model="form.nombre" required />
-    <label>Apellido</label>
-    <input v-model="form.apellido" required />
-    <label>Correo</label>
-    <input v-model="form.email" type="email" required />
-    <label>Teléfono (opcional)</label>
-    <input v-model="form.telefono" />
-    <label>Contraseña (mínimo 8 caracteres)</label>
-    <input v-model="form.password" type="password" minlength="8" required />
+    <label for="registro-nombre">Nombre</label>
+    <input id="registro-nombre" v-model="form.nombre" required />
+    <label for="registro-apellido">Apellido</label>
+    <input id="registro-apellido" v-model="form.apellido" required />
+    <label for="registro-correo">Correo</label>
+    <input id="registro-correo" v-model="form.email" type="email" required />
+    <label for="registro-telefono">Teléfono (opcional)</label>
+    <input id="registro-telefono" v-model="form.telefono" />
+    <label for="registro-contrasena">Contraseña (mínimo 8 caracteres)</label>
+    <input id="registro-contrasena" v-model="form.password" type="password" minlength="8" required />
     <button class="btn" type="submit" :disabled="cargando">{{ cargando ? 'Creando…' : 'Crear cuenta' }}</button>
   </form>
 </template>

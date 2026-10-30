@@ -59,7 +59,7 @@ onMounted(async () => {
 
     <div class="tarjeta">
       <h3>Pedidos que requieren atención</h3>
-      <p v-if="!metricas.pedidosQueRequierenAtencion.length" style="color:#888">Ninguno por ahora.</p>
+      <p v-if="!metricas.pedidosQueRequierenAtencion.length" style="color:var(--texto-secundario)">Ninguno por ahora.</p>
       <table v-else>
         <tr><th>Pedido</th><th>Cliente</th><th>Motivo</th><th>Antigüedad</th><th>Monto</th></tr>
         <tr v-for="p in metricas.pedidosQueRequierenAtencion" :key="p.codigo">
