@@ -91,7 +91,7 @@ watch(filtros, cargarProductos, { deep: true });
     <div class="rejilla">
       <div v-for="p in recomendaciones" :key="p.id">
         <ProductoCard :producto="p" />
-        <div style="font-size:11px;color:#888;margin-top:4px">{{ p.motivo }}</div>
+        <div style="font-size:11px;color:var(--texto-secundario);margin-top:4px">{{ p.motivo }}</div>
       </div>
     </div>
   </section>
