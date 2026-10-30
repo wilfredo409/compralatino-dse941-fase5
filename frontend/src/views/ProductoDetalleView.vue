@@ -132,10 +132,10 @@ const requiereSesion = computed(() => !sesion.usuario);
         <template v-else>
           <div v-if="direccionFaltante" class="form" style="margin-top:16px;border:1px solid #ddd;padding:14px;border-radius:8px">
             <strong>Agrega una dirección de envío para continuar</strong>
-            <label>País</label><input v-model="nuevaDireccion.pais" />
-            <label>Departamento</label><input v-model="nuevaDireccion.departamento" />
-            <label>Ciudad</label><input v-model="nuevaDireccion.ciudad" />
-            <label>Detalle</label><input v-model="nuevaDireccion.detalle" />
+            <label for="direccion-pais">País</label><input id="direccion-pais" v-model="nuevaDireccion.pais" />
+            <label for="direccion-departamento">Departamento</label><input id="direccion-departamento" v-model="nuevaDireccion.departamento" />
+            <label for="direccion-ciudad">Ciudad</label><input id="direccion-ciudad" v-model="nuevaDireccion.ciudad" />
+            <label for="direccion-detalle">Detalle</label><input id="direccion-detalle" v-model="nuevaDireccion.detalle" />
             <button class="btn" @click="guardarDireccion">Guardar dirección</button>
           </div>
 
@@ -145,11 +145,11 @@ const requiereSesion = computed(() => !sesion.usuario);
             </button>
           </div>
 
-          <form v-else class="accion-producto" @submit.prevent="enviarOferta">
-            <label for="monto-oferta">Oferta (JPY)</label>
-            <input id="monto-oferta" type="number" v-model.number="montoJpy" min="1" step="1" required />
-            <button class="btn" type="submit" :disabled="enviando">{{ enviando ? 'Enviando…' : 'Enviar oferta a YAuctions' }}</button>
-          </form>
+          <div v-else style="margin-top:16px;display:flex;gap:8px;align-items:center">
+            <label for="oferta-jpy">Oferta (JPY)</label>
+            <input id="oferta-jpy" type="number" v-model.number="montoJpy" min="1" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px" />
+            <button class="btn" :disabled="enviando" @click="enviarOferta">{{ enviando ? 'Enviando…' : 'Enviar oferta a YAuctions' }}</button>
+          </div>
         </template>
       </div>
     </div>
