@@ -24,7 +24,7 @@ async function enviar() {
 
 <template>
   <h2>Crear cuenta</h2>
-  <div v-if="error" class="alerta error">{{ error }}</div>
+  <div v-if="error" class="alerta error" role="alert">{{ error }}</div>
   <form class="form" @submit.prevent="enviar">
     <label>Nombre</label>
     <input v-model="form.nombre" required />

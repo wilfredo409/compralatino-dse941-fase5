@@ -30,7 +30,7 @@ async function enviar() {
     Cuentas demo: <code>admin@compralatino.com</code> / <code>Admin1234!</code>
     (administración) o <code>laura.pineda@demo.compralatino.com</code> / <code>Demo1234!</code> (cliente).
   </p>
-  <div v-if="error" class="alerta error">{{ error }}</div>
+  <div v-if="error" class="alerta error" role="alert">{{ error }}</div>
   <form class="form" @submit.prevent="enviar">
     <label>Correo</label>
     <input v-model="email" type="email" required autocomplete="username" />
