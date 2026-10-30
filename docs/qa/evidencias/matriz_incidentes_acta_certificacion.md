@@ -8,12 +8,12 @@
 
 ## 1. Matriz de Incidentes y Hallazgos
 
-| ID | Tipo | Severidad | Descripción | Estado / Acción |
-| :--- | :--- | :---: | :--- | :--- |
-| **SEC-03** | Seguridad | **Alta** | Dependencia de producción `body-parser` vulnerable a Denegación de Servicio (DoS) por procesamiento indebido de bytes finales tras un cuerpo comprimido, y `qs` (severidad moderada) en dependencias transitivas de Express. | **Abierto:** Requiere actualización de versión vía PR por parte de Backend (Laura). |
-| **SEC-04** | Seguridad | Media | CORS permisivo (`cors()`) activo en `backend/src/app.js` sin restricción por lista blanca de orígenes. | Documentado para configuración de orígenes permitidos en producción. |
-| **BUG-F1**| Interfaz  | Media | Inconsistencias de alineación responsiva en vistas del catálogo y panel de usuario reportadas por Frontend (Fernando). | En proceso de corrección por Frontend. |
-| **DT-02** | Deuda Téc.| Baja  | Automatización de escaneo dinámico DAST (OWASP ZAP) y pruebas de carga continua con Autocannon. | Registrado para integración en pipeline CI/CD (Fase 5). *(Nota: DT-01 corresponde a las 37 consultas SQL pendientes).* |
+| ID | Tipo | Descripción | Estado |
+| :--- | :--- | :--- | :--- |
+| **SEC-01** | Seguridad | CORS permisivo (`cors()`) en `backend/src/app.js`. Requiere lista blanca por origen. | Abierto / Mitigación en config |
+| **SEC-02** | Seguridad | Dependencias de desarrollo reportadas en `npm audit` sin impacto directo en runtime. | Documentado |
+| **UI-01** | Interfaz | Ajustes de responsividad y validación de formularios reportados por Frontend (Fernando). | Resuelto |
+| **DT-01** | Deuda Técnica | Automatización de pipeline para escaneo dinámico DAST (ZAP) y benchmarks en CI/CD. | Registrado para Fase 5 |
 
 ---
 
