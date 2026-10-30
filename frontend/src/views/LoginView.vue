@@ -32,10 +32,10 @@ async function enviar() {
   </p>
   <div v-if="error" class="alerta error">{{ error }}</div>
   <form class="form" @submit.prevent="enviar">
-    <label>Correo</label>
-    <input v-model="email" type="email" required autocomplete="username" />
-    <label>Contraseña</label>
-    <input v-model="password" type="password" required autocomplete="current-password" />
+    <label for="login-correo">Correo</label>
+    <input id="login-correo" v-model="email" type="email" required autocomplete="username" />
+    <label for="login-contrasena">Contraseña</label>
+    <input id="login-contrasena" v-model="password" type="password" required autocomplete="current-password" />
     <button class="btn" type="submit" :disabled="cargando">{{ cargando ? 'Ingresando…' : 'Ingresar' }}</button>
   </form>
 </template>

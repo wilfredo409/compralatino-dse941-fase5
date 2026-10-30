@@ -8,7 +8,7 @@ defineProps({ producto: { type: Object, required: true } });
     <img :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)" :alt="producto.titulo" />
     <h3>{{ producto.titulo }}</h3>
     <div class="precio">USD {{ producto.precioUsd?.toFixed(2) ?? '—' }}</div>
-    <div style="font-size:11px;color:#888">JPY {{ producto.precioJpy?.toLocaleString('es-SV') }}</div>
+    <div style="font-size:11px;color:var(--texto-secundario)">JPY {{ producto.precioJpy?.toLocaleString('es-SV') }}</div>
     <span class="etiqueta" :class="{ subasta: producto.tipoVenta === 'subasta' }">
       {{ producto.tipoVenta === 'subasta' ? 'Subasta' : 'Compra directa' }}
     </span>

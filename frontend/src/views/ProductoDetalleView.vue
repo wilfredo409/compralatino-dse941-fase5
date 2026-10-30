@@ -111,7 +111,7 @@ const requiereSesion = computed(() => !sesion.usuario);
         <h2>{{ producto.titulo }}</h2>
         <p style="color:#555">{{ producto.descripcion }}</p>
         <div class="precio" style="font-size:26px">USD {{ producto.precioUsd?.toFixed(2) }}</div>
-        <div style="color:#888;margin-bottom:8px">JPY {{ producto.precioJpy.toLocaleString('es-SV') }} · tasa incl. margen de intermediación</div>
+        <div style="color:var(--texto-secundario);margin-bottom:8px">JPY {{ producto.precioJpy.toLocaleString('es-SV') }} · tasa incl. margen de intermediación</div>
         <span class="etiqueta" :class="{ subasta: producto.tipoVenta === 'subasta' }">
           {{ producto.tipoVenta === 'subasta' ? 'Subasta' : 'Compra directa' }}
         </span>
@@ -128,22 +128,22 @@ const requiereSesion = computed(() => !sesion.usuario);
         <template v-else>
           <div v-if="direccionFaltante" class="form" style="margin-top:16px;border:1px solid #ddd;padding:14px;border-radius:8px">
             <strong>Agrega una dirección de envío para continuar</strong>
-            <label>País</label><input v-model="nuevaDireccion.pais" />
-            <label>Departamento</label><input v-model="nuevaDireccion.departamento" />
-            <label>Ciudad</label><input v-model="nuevaDireccion.ciudad" />
-            <label>Detalle</label><input v-model="nuevaDireccion.detalle" />
+            <label for="direccion-pais">País</label><input id="direccion-pais" v-model="nuevaDireccion.pais" />
+            <label for="direccion-departamento">Departamento</label><input id="direccion-departamento" v-model="nuevaDireccion.departamento" />
+            <label for="direccion-ciudad">Ciudad</label><input id="direccion-ciudad" v-model="nuevaDireccion.ciudad" />
+            <label for="direccion-detalle">Detalle</label><input id="direccion-detalle" v-model="nuevaDireccion.detalle" />
             <button class="btn" @click="guardarDireccion">Guardar dirección</button>
           </div>
 
-          <div v-else-if="producto.tipoVenta === 'fijo'" style="margin-top:16px">
+          <div v-else-if="producto.tipoVenta === 'fijo'" class="accion-producto">
             <button class="btn" :disabled="enviando || producto.stock < 1" @click="comprarAhora">
               {{ producto.stock < 1 ? 'Sin stock' : (enviando ? 'Procesando…' : 'Comprar ahora') }}
             </button>
           </div>
 
           <div v-else style="margin-top:16px;display:flex;gap:8px;align-items:center">
-            <label>Oferta (JPY)</label>
-            <input type="number" v-model.number="montoJpy" min="1" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px" />
+            <label for="oferta-jpy">Oferta (JPY)</label>
+            <input id="oferta-jpy" type="number" v-model.number="montoJpy" min="1" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px" />
             <button class="btn" :disabled="enviando" @click="enviarOferta">{{ enviando ? 'Enviando…' : 'Enviar oferta a YAuctions' }}</button>
           </div>
         </template>
