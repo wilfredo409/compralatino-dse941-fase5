@@ -2,32 +2,25 @@
 
 ## Alcance y dimensiones verificadas
 
-La dimensión de prueba es la que aparece en la barra superior de cada captura
-de DevTools:
-teléfono **375 × 667 px**, tableta **768 × 1024 px** y computadora
-**1280 × 800 px**. El tamaño total del PNG incluye el marco de DevTools y no
-se usa como dimensión del viewport emulado.
+Los viewports verificados son teléfono **375 × 667 px**, tableta
+**768 × 1024 px** y computadora **1280 × 800 px**. Las capturas nuevas tienen
+exactamente las dimensiones del viewport y no incluyen marco de DevTools.
 
 Las rutas protegidas se capturaron con sesión de cliente para mis pedidos y
-con rol administrador para el panel. Las capturas son de página completa donde
-aplica y están en `../qa/evidencias/`.
+con rol administrador para el panel. Las capturas anteriores de esas vistas
+están en `../qa/evidencias/`.
 
 La Tabla 26 se usa como referencia para las columnas del catálogo, el diseño
-de formularios y las adaptaciones por dispositivo. Las capturas guardadas
-documentan la reproducción inicial de los defectos. Tras la autorización se
-aplicaron los seis ajustes CSS sencillos y se revalidaron sus breakpoints en la
-aplicación: columnas del catálogo, formularios de tableta y tabla/navegación de
-pedidos. No se reemplazaron las capturas de reproducción.
-
-Los incidentes pendientes de navegación/interacción/estructura serán
-manejados en la rama `fase4/fix-incidente`.
+de formularios y las adaptaciones por dispositivo. Los incidentes 07–10 se
+implementaron y verificaron en los tres breakpoints; las capturas relacionadas
+se reemplazaron por imágenes del estado corregido.
 
 ## Matriz de vistas
 
 | Vista / ruta | Teléfono — 375 × 667 | Tableta — 768 × 1024 | Computadora — 1280 × 800 |
 |---|---|---|---|
-| Catálogo `/` | **Corregido CSS** — una columna con tarjeta horizontal; revalidado a 375 px sin desbordamiento. La barra inferior fija y los filtros desplegables siguen pendientes. Captura de reproducción: [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png). | **Corregido CSS** — dos columnas revalidadas a 768 px. Filtros colapsables y menú compacto siguen pendientes. Captura de reproducción: [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png). | **Corregido CSS** — tres columnas revalidadas a 1280 px. El panel de filtros lateral y el buscador expandido siguen pendientes. Captura de reproducción: [F-1_catalogo_1280px.png](../qa/evidencias/F-1_catalogo_1280px.png). |
-| Detalle `/productos/:id` | **Pendiente de ajuste funcional** — el acceso para continuar aparece en el flujo del contenido y no permanece fijo. [F-1_detalle_375px.png](../qa/evidencias/F-1_detalle_375px.png) | **Pendiente de verificación de imagen** — la captura muestra el recurso placeholder y no permite comprobar una imagen servida en resolución intermedia. [F-1_detalle_768px.png](../qa/evidencias/F-1_detalle_768px.png) | **OK visual** — detalle e imagen visibles, sin defecto apreciable en la captura. [F-1_detalle_1280px.png](../qa/evidencias/F-1_detalle_1280px.png) |
+| Catálogo `/` | **Corregido** — barra inferior fija de cuatro accesos y filtros en panel desplegable. [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png) · [Filtros abiertos](../qa/evidencias/F-1_catalogo_filtros_375px.png) · [Cuenta abierta](../qa/evidencias/F-1_catalogo_cuenta_375px.png) | **Corregido** — navegación compacta desplegable y filtros colapsados al abrir. [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png) · [Menú abierto](../qa/evidencias/F-1_catalogo_menu_768px.png) · [Filtros abiertos](../qa/evidencias/F-1_catalogo_filtros_768px.png) | **Corregido** — panel lateral permanente de filtros y tres columnas. [F-1_catalogo_1280px.png](../qa/evidencias/F-1_catalogo_1280px.png) |
+| Detalle `/productos/:id` | **Corregido** — la acción de compra/oferta queda fija sobre la barra inferior, sin tapar la imagen ni el contenido. [F-1_detalle_375px.png](../qa/evidencias/F-1_detalle_375px.png) | **Corregido** — imagen de prueba cargada y dimensionada para el ancho de tableta; el seed demo sigue usando placeholders. [F-1_detalle_768px.png](../qa/evidencias/F-1_detalle_768px.png) | **OK visual** — detalle e imagen visibles. [F-1_detalle_1280px.png](../qa/evidencias/F-1_detalle_1280px.png) |
 | Ingreso `/ingresar` | **OK** — formulario en una columna, de acuerdo con Tabla 26. [F-1_ingreso_375px.png](../qa/evidencias/F-1_ingreso_375px.png) | **Corregido CSS** — campos dispuestos en dos columnas; revalidado a 768 px sin desbordamiento. Captura de reproducción: [F-1_ingreso_768px.png](../qa/evidencias/F-1_ingreso_768px.png). | **OK visual** — formulario accesible. [F-1_ingreso_1280px.png](../qa/evidencias/F-1_ingreso_1280px.png) |
 | Registro `/registro` | **OK** — formulario en una columna, de acuerdo con Tabla 26. [F-1_registro_375px.png](../qa/evidencias/F-1_registro_375px.png) | **Corregido CSS** — campos dispuestos en dos columnas; revalidado a 768 px sin desbordamiento. Captura de reproducción: [F-1_registro_768px.png](../qa/evidencias/F-1_registro_768px.png). | **OK visual** — formulario accesible. [F-1_registro_1280px.png](../qa/evidencias/F-1_registro_1280px.png) |
 | Mis pedidos `/mis-pedidos` | **Corregido CSS** — filas apiladas con etiquetas, tabla y navegación autenticada dentro del ancho emulado. Captura de reproducción: [F-1_mis-pedidos_375px.png](../qa/evidencias/F-1_mis-pedidos_375px.png). | **Corregido CSS** — las siete columnas, incluida Fecha, caben a 768 px. Captura de reproducción: [F-1_mis-pedidos_768px.png](../qa/evidencias/F-1_mis-pedidos_768px.png). | **OK visual** — tabla completa y legible. [F-1_mis-pedidos_1280px.png](../qa/evidencias/F-1_mis-pedidos_1280px.png) |
@@ -37,23 +30,23 @@ manejados en la rama `fase4/fix-incidente`.
 
 ### Correcciones CSS sencillas autorizadas y aplicadas
 
-| ID | Hallazgo inicial | Captura(s) de reproducción | Corrección y revalidación |
+| ID | Hallazgo | Evidencia actual | Corrección y revalidación |
 |---|---|---|---|
-| BUG-F1-01 | Las tarjetas del catálogo no son horizontales en teléfono. | [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png) | Tarjeta horizontal aplicada; revalidado a 375 px con una columna y sin overflow. **Corregido** |
-| BUG-F1-02 | El catálogo muestra tres columnas a 768 px, en vez de dos. | [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png) | Dos columnas aplicadas y verificadas a 768 px. **Corregido** |
-| BUG-F1-03 | El catálogo muestra cuatro columnas a 1280 px, en vez de tres. | [F-1_catalogo_1280px.png](../qa/evidencias/F-1_catalogo_1280px.png) | Tres columnas aplicadas y verificadas a 1280 px. **Corregido** |
+| BUG-F1-01 | Las tarjetas del catálogo no eran horizontales en teléfono. | [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png) | Tarjeta horizontal aplicada; revalidado a 375 px con una columna y sin overflow. **Corregido** |
+| BUG-F1-02 | El catálogo mostraba tres columnas a 768 px, en vez de dos. | [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png) | Dos columnas aplicadas y verificadas a 768 px. **Corregido** |
+| BUG-F1-03 | El catálogo mostraba cuatro columnas a 1280 px, en vez de tres. | [F-1_catalogo_1280px.png](../qa/evidencias/F-1_catalogo_1280px.png) | Tres columnas aplicadas y verificadas a 1280 px. **Corregido** |
 | BUG-F1-04 | Los formularios de ingreso y registro tienen una sola columna a 768 px. | [F-1_ingreso_768px.png](../qa/evidencias/F-1_ingreso_768px.png), [F-1_registro_768px.png](../qa/evidencias/F-1_registro_768px.png) | Etiquetas y controles dispuestos en dos columnas; ambos formularios verificados a 768 px. **Corregido** |
 | BUG-F1-05 | La tabla de pedidos es demasiado estrecha en teléfono, parte textos y aprieta la navegación autenticada. | [F-1_mis-pedidos_375px.png](../qa/evidencias/F-1_mis-pedidos_375px.png) | Filas en pares etiqueta/valor y navegación ajustable; verificado a 375 px sin overflow. **Corregido** |
 | BUG-F1-06 | La tabla de pedidos no muestra completa la columna Fecha en tableta. | [F-1_mis-pedidos_768px.png](../qa/evidencias/F-1_mis-pedidos_768px.png) | Tabla ajustada; las siete columnas caben a 768 px sin overflow. **Corregido** |
 
-### Pendientes que no son un ajuste CSS sencillo
+### Incidencias funcionales restantes
 
-| ID | Hallazgo | Capturas que lo evidencian | Pendiente |
+| ID | Hallazgo | Evidencia actualizada | Corrección y estado |
 |---|---|---|---|
-| BUG-F1-07 | La navegación móvil no usa barra inferior fija de cuatro accesos ni menú lateral; en tableta no usa barra compacta con menú desplegable. | [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png), [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png) | Cambiar estructura e interacción de navegación. |
-| BUG-F1-08 | Los filtros no se despliegan en un panel en teléfono ni permanecen colapsados en tableta; en computadora no forman un panel lateral permanente. | [F-1_catalogo_375px.png](../qa/evidencias/F-1_catalogo_375px.png), [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png), [F-1_catalogo_1280px.png](../qa/evidencias/F-1_catalogo_1280px.png) | Añadir interacción de desplegar/colapsar y reestructurar la distribución del catálogo. |
-| BUG-F1-09 | El acceso de compra/oferta del detalle móvil no permanece fijo. | [F-1_detalle_375px.png](../qa/evidencias/F-1_detalle_375px.png) | Definir un bloque fijo de acción que no cubra los datos del producto ni los controles. |
-| OBS-F1-10 | Las capturas de tableta muestran placeholders, así que no permiten verificar la variante de imagen intermedia requerida. No es un defecto confirmado por esta evidencia. | [F-1_detalle_768px.png](../qa/evidencias/F-1_detalle_768px.png), [F-1_catalogo_768px.png](../qa/evidencias/F-1_catalogo_768px.png) | Validar la disponibilidad de imágenes y confirmar el requisito con un producto que tenga imagen real. |
+| BUG-F1-07 | En móvil faltaban la barra fija de cuatro accesos y el menú lateral; en tableta faltaba el menú compacto. | [Catálogo móvil](../qa/evidencias/F-1_catalogo_375px.png) · [Cuenta móvil](../qa/evidencias/F-1_catalogo_cuenta_375px.png) · [Menú tablet](../qa/evidencias/F-1_catalogo_menu_768px.png) | Barra inferior Inicio/Filtros/Pedidos/Cuenta y menú lateral de cuenta en móvil; menú desplegable en tableta. **Corregido** |
+| BUG-F1-08 | Los filtros no se desplegaban en móvil/tableta ni quedaban en un panel lateral en escritorio. | [Panel móvil](../qa/evidencias/F-1_catalogo_filtros_375px.png) · [Panel tablet](../qa/evidencias/F-1_catalogo_filtros_768px.png) · [Escritorio](../qa/evidencias/F-1_catalogo_1280px.png) | Panel inferior en móvil, colapsable en tableta y lateral permanente en escritorio. **Corregido** |
+| BUG-F1-09 | La acción de compra/oferta no permanecía fija en el detalle móvil. | [Detalle móvil](../qa/evidencias/F-1_detalle_375px.png) | Barra de acción fija sobre la navegación móvil y espacio inferior para que no cubra el contenido. **Corregido** |
+| BUG-F1-10 | La captura de tableta no permitía comprobar la escala de una imagen cargada porque solo mostraba el placeholder del seed. | [Detalle tablet](../qa/evidencias/F-1_detalle_768px.png) | Verificada la carga de una ilustración QA original de 800 × 600 y su render a 307 px en tableta y 320 px en móvil. El seed de demostración continúa usando placeholders y no aporta fotografías/variantes CDN. **Corregido en render responsivo; origen de imágenes reales pendiente de datos de producto** |
 
 El panel administrativo en teléfono y tableta no se incorpora al registro de
 defectos: la nota de Tabla 26 lo define como optimizado únicamente para
@@ -62,18 +55,18 @@ limitación conocida.
 
 ## Evidencia
 
-Las 18 capturas conservan en su encabezado de DevTools el viewport emulado.
-Su resolución de archivo incluye también el marco del navegador; para comprobar
-el breakpoint se tomó la lectura “Dimensiones” de cada captura:
+Las capturas nuevas vinculadas a los bugs 07–10 se guardaron directamente con
+el viewport indicado (sin marco de DevTools). Las capturas de las vistas no
+afectadas conservan el formato anterior:
 
 | Ancho emulado | Vistas |
 |---|---|
-| 375 × 667 px | Catálogo, detalle, ingreso, registro, mis pedidos y administración. |
-| 768 × 1024 px | Catálogo, detalle, ingreso, registro, mis pedidos y administración. |
-| 1280 × 800 px | Catálogo, detalle, ingreso, registro, mis pedidos y administración. |
+| 375 × 667 px | Catálogo, catálogo con filtros, cuenta abierta, detalle móvil. |
+| 768 × 1024 px | Catálogo, menú compacto, filtros, detalle con imagen cargada. |
+| 1280 × 800 px | Catálogo con panel lateral de filtros. |
 
-Las capturas de reproducción se conservan sin cambios para documentar los
-defectos iniciales. La compilación de producción del frontend pasó y las
-mediciones posteriores confirmaron las columnas esperadas, el ajuste de los
-formularios y la ausencia de desplazamiento horizontal en las combinaciones
-revalidadas.
+Las cinco capturas asociadas a los bugs 07–10 se reemplazaron; las cuatro vistas
+adicionales muestran el menú de cuenta, el menú compacto y paneles desplegados. Se probaron las
+interacciones y se comprobó que el ancho de desplazamiento no supera el ancho
+útil del documento en 375, 768 y 1280 px. La imagen de prueba es una ilustración
+SVG original usada solo para QA; no representa una fotografía del catálogo real.

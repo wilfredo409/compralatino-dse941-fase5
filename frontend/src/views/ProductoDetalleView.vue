@@ -105,8 +105,12 @@ const requiereSesion = computed(() => !sesion.usuario);
   </div>
   <div v-else-if="producto">
     <RouterLink to="/">&larr; Volver al catálogo</RouterLink>
-    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:14px">
-      <img :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)" style="width:320px;border-radius:8px" />
+    <div class="producto-detalle">
+      <img
+        class="producto-imagen"
+        :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)"
+        :alt="producto.titulo"
+      />
       <div style="flex:1;min-width:260px">
         <h2>{{ producto.titulo }}</h2>
         <p style="color:#555">{{ producto.descripcion }}</p>
@@ -135,17 +139,17 @@ const requiereSesion = computed(() => !sesion.usuario);
             <button class="btn" @click="guardarDireccion">Guardar dirección</button>
           </div>
 
-          <div v-else-if="producto.tipoVenta === 'fijo'" style="margin-top:16px">
+          <div v-else-if="producto.tipoVenta === 'fijo'" class="accion-producto">
             <button class="btn" :disabled="enviando || producto.stock < 1" @click="comprarAhora">
               {{ producto.stock < 1 ? 'Sin stock' : (enviando ? 'Procesando…' : 'Comprar ahora') }}
             </button>
           </div>
 
-          <div v-else style="margin-top:16px;display:flex;gap:8px;align-items:center">
-            <label>Oferta (JPY)</label>
-            <input type="number" v-model.number="montoJpy" min="1" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px" />
-            <button class="btn" :disabled="enviando" @click="enviarOferta">{{ enviando ? 'Enviando…' : 'Enviar oferta a YAuctions' }}</button>
-          </div>
+          <form v-else class="accion-producto" @submit.prevent="enviarOferta">
+            <label for="monto-oferta">Oferta (JPY)</label>
+            <input id="monto-oferta" type="number" v-model.number="montoJpy" min="1" step="1" required />
+            <button class="btn" type="submit" :disabled="enviando">{{ enviando ? 'Enviando…' : 'Enviar oferta a YAuctions' }}</button>
+          </form>
         </template>
       </div>
     </div>

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api.js';
 import { sesion } from '../store/auth.js';
 import ProductoCard from '../components/ProductoCard.vue';
@@ -11,6 +12,9 @@ const cargando = ref(true);
 const cargandoMas = ref(false);
 const cursorSiguiente = ref(null);
 const error = ref('');
+const filtrosAbiertos = ref(false);
+const route = useRoute();
+const router = useRouter();
 // Descarta respuestas de peticiones antiguas si el usuario cambia de filtro
 // mientras hay una carga en curso.
 let peticionActual = 0;
@@ -83,6 +87,14 @@ onMounted(async () => {
 
 watch(() => sesion.usuario, cargarRecomendaciones);
 watch(filtros, cargarProductos, { deep: true });
+watch(() => route.query.filtros, (valor) => {
+  filtrosAbiertos.value = valor === 'abrir';
+}, { immediate: true });
+
+function cerrarFiltros() {
+  filtrosAbiertos.value = false;
+  if (route.query.filtros) router.replace({ path: '/', query: {} });
+}
 </script>
 
 <template>
@@ -97,26 +109,56 @@ watch(filtros, cargarProductos, { deep: true });
   </section>
 
   <h2>Catálogo</h2>
-  <div class="filtros">
-    <select v-model="filtros.categoria">
-      <option value="">Todas las categorías</option>
-      <option v-for="c in categorias" :key="c.id" :value="c.id">{{ '—'.repeat(c.nivel) }} {{ c.nombre }}</option>
-    </select>
-    <select v-model="filtros.tipoVenta">
-      <option value="">Todos los tipos de venta</option>
-      <option value="fijo">Compra directa</option>
-      <option value="subasta">Subasta</option>
-    </select>
-    <input v-model="filtros.q" placeholder="Buscar producto…" />
-  </div>
+  <button
+    class="filtros-toggle"
+    type="button"
+    aria-controls="panel-filtros"
+    :aria-expanded="filtrosAbiertos"
+    @click="filtrosAbiertos = !filtrosAbiertos"
+  >
+    {{ filtrosAbiertos ? 'Ocultar filtros' : 'Mostrar filtros' }}
+  </button>
+  <div class="catalogo-layout">
+    <div v-if="filtrosAbiertos" class="filtros-backdrop abierto" @click="cerrarFiltros"></div>
+    <aside
+      id="panel-filtros"
+      class="panel-filtros"
+      :class="{ abierto: filtrosAbiertos }"
+      :role="filtrosAbiertos ? 'dialog' : null"
+      :aria-modal="filtrosAbiertos ? 'true' : null"
+      aria-label="Filtros del catálogo"
+    >
+      <div class="encabezado-filtros">
+        <h3>Filtros</h3>
+        <button class="cerrar-panel" type="button" @click="cerrarFiltros">Cerrar</button>
+      </div>
+      <div class="filtros">
+        <label for="filtro-categoria">Categoría</label>
+        <select id="filtro-categoria" v-model="filtros.categoria">
+          <option value="">Todas las categorías</option>
+          <option v-for="c in categorias" :key="c.id" :value="c.id">{{ '—'.repeat(c.nivel) }} {{ c.nombre }}</option>
+        </select>
+        <label for="filtro-tipo">Tipo de venta</label>
+        <select id="filtro-tipo" v-model="filtros.tipoVenta">
+          <option value="">Todos los tipos de venta</option>
+          <option value="fijo">Compra directa</option>
+          <option value="subasta">Subasta</option>
+        </select>
+        <label for="filtro-busqueda">Buscar</label>
+        <input id="filtro-busqueda" v-model="filtros.q" placeholder="Buscar producto…" />
+      </div>
+    </aside>
 
-  <div v-if="error" class="alerta error">{{ error }}</div>
-  <p v-else-if="cargando">Cargando catálogo…</p>
-  <p v-else-if="!productos.length">No hay productos que coincidan con los filtros.</p>
-  <div v-else class="rejilla">
-    <ProductoCard v-for="p in productos" :key="p.id" :producto="p" />
-  </div>
-  <div v-if="!error && !cargando && cursorSiguiente" style="text-align:center;margin:20px 0">
-    <button :disabled="cargandoMas" @click="verMas">{{ cargandoMas ? 'Cargando…' : 'Ver más productos' }}</button>
+    <section class="resultados-catalogo" aria-label="Productos">
+      <div v-if="error" class="alerta error">{{ error }}</div>
+      <p v-else-if="cargando">Cargando catálogo…</p>
+      <p v-else-if="!productos.length">No hay productos que coincidan con los filtros.</p>
+      <div v-else class="rejilla">
+        <ProductoCard v-for="p in productos" :key="p.id" :producto="p" />
+      </div>
+      <div v-if="!error && !cargando && cursorSiguiente" style="text-align:center;margin:20px 0">
+        <button :disabled="cargandoMas" @click="verMas">{{ cargandoMas ? 'Cargando…' : 'Ver más productos' }}</button>
+      </div>
+    </section>
   </div>
 </template>

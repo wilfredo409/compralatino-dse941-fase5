@@ -11,7 +11,7 @@
 | :--- | :--- | :--- | :--- |
 | **SEC-01** | Seguridad | CORS permisivo (`cors()`) en `backend/src/app.js`. Requiere lista blanca por origen. | Abierto / Mitigación en config |
 | **SEC-02** | Seguridad | Dependencias de desarrollo reportadas en `npm audit` sin impacto directo en runtime. | Documentado |
-| **UI-01** | Interfaz | Ajustes de responsividad y validación de formularios reportados por Frontend (Fernando). | En corrección |
+| **UI-01** | Interfaz | Ajustes de responsividad y validación de formularios reportados por Frontend (Fernando). | Resuelto |
 | **DT-01** | Deuda Técnica | Automatización de pipeline para escaneo dinámico DAST (ZAP) y benchmarks en CI/CD. | Registrado para Fase 5 |
 
 ---
