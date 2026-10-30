@@ -57,11 +57,14 @@ test('login: con credenciales correctas entrega access y refresh token', { skip:
   assert.equal(res.body.expiraEn, 900);
 });
 
-test('login: contraseña incorrecta o usuario inexistente responden 401', { skip: SIN_BD }, async () => {
+test('login: credenciales incorrectas responden 401 con un mensaje claro y uniforme', { skip: SIN_BD }, async () => {
   const mala = await request(app).post('/api/v1/auth/login').send({ email, password: 'Incorrecta99!' });
   assert.equal(mala.status, 401);
+  assert.equal(mala.body.mensaje, 'Correo o contraseña incorrectos');
+
   const inexistente = await request(app).post('/api/v1/auth/login').send({ email: `nadie.${sufijo}@pruebas.compralatino.test`, password });
   assert.equal(inexistente.status, 401);
+  assert.equal(inexistente.body.mensaje, 'Correo o contraseña incorrectos');
 });
 
 test('refresh: un refresh token válido emite un par nuevo; un access token no sirve como refresh', { skip: SIN_BD }, async () => {
