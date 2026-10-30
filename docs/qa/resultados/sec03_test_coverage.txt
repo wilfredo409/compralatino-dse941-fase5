@@ -1,0 +1,126 @@
+﻿
+> compralatino-backend@1.0.0 test:coverage
+> node --test --experimental-test-coverage --test-coverage-exclude="test/**" --test-coverage-lines=80 "test/**/*.test.js"
+
+Ô£ö sin token todo el panel responde 401 (1192.9751ms)
+Ô£ö un cliente no puede usar ninguna ruta del panel (403) (43.5856ms)
+Ô£ö m├®tricas: devuelve las tarjetas del wireframe W06 con el formato esperado (49.1786ms)
+Ô£ö m├®tricas: un pedido con pago rechazado aparece en ┬½requieren atenci├│n┬╗ (17.5457ms)
+Ô£ö pedidos: lista paginada por cursor y filtra por estado (37.2189ms)
+Ô£ö reporte de transacciones: exporta CSV con encabezado y el pago del pedido (16.6354ms)
+Ô£ö usuarios: lista paginada sin exponer la contrase├▒a (9.4546ms)
+Ô£ö usuarios (PUT): valida los datos y responde 404 si el usuario no existe (24.3233ms)
+Ô£ö usuarios (PUT): suspender una cuenta le corta el acceso y queda en la auditor├¡a (59.6035ms)
+Ô£ö auditor├¡a: pagina con cursor (19.8012ms)
+Ô£ö GET /salud responde ok sin autenticaci├│n (70.5528ms)
+Ô£ö una ruta inexistente devuelve 404 con el formato de error uniforme (9.8322ms)
+Ô£ö registro: crea la cuenta en pendiente_verificacion y no devuelve la contrase├▒a (344.6888ms)
+Ô£ö registro: el correo repetido responde 409 (9.9404ms)
+Ô£ö registro: valida campos obligatorios y la longitud de la contrase├▒a (16.8846ms)
+Ô£ö login: con credenciales correctas entrega access y refresh token (141.9659ms)
+Ô£ö login: contrase├▒a incorrecta o usuario inexistente responden 401 (145.938ms)
+Ô£ö refresh: un refresh token v├ílido emite un par nuevo; un access token no sirve como refresh (149.1293ms)
+Ô£ö rutas protegidas: sin token o con token inv├ílido responden 401; con token v├ílido pasan (158.047ms)
+Ô£ö el rol de cliente no accede al panel de administraci├│n (403) (134.2959ms)
+Ô£ö cat├ílogo: filtra por categor├¡a y trae los productos con los campos del contrato (231.6504ms)
+Ô£ö cat├ílogo: filtra por tipo de venta, por rango de precio y por texto (51.5295ms)
+Ô£ö cat├ílogo: pagina por cursor sin repetir ni omitir productos (17.7912ms)
+Ô£ö cat├ílogo: el cursor no pierde productos con el mismo instante en microsegundos (33.3934ms)
+Ô£ö ficha de producto: devuelve el detalle con sus im├ígenes (9.3135ms)
+Ô£ö ficha de producto: 404 si no existe y 400 (no 500) si el identificador no es v├ílido (15.2836ms)
+Ô£ö categor├¡as: devuelve el ├írbol con las subcategor├¡as anidadas (48.1008ms)
+Ô£ö SEC-01: registro rechaza nombre mayor a 80 caracteres con 400 (83.8847ms)
+Ô£ö SEC-02: registro rechaza nombre con tipo incorrecto con 400 (30.9021ms)
+Ô£ö compra directa: calcula subtotal, flete fijo (12) y comisi├│n (5 %) y descuenta el stock (850.4026ms)
+Ô£ö compra directa: sin stock suficiente responde 409 y no cambia el stock (18.1533ms)
+Ô£ö compra: valida los datos de entrada y que la direcci├│n sea del usuario (21.8005ms)
+Ô£ö un usuario no puede ver ni pagar el pedido de otro (404) (43.1117ms)
+Ô£ö pago: autoriza el pago, el pedido pasa a ┬½pagado┬╗ y un segundo pago se rechaza (409) (80.1407ms)
+Ô£ö webhook de pagos: sin firma v├ílida se rechaza (401) (10.4163ms)
+Ô£ö webhook de pagos: ┬½rechazado┬╗ deja el pedido ┬½cancelado┬╗ (coherente con el panel admin) (59.3451ms)
+Ô£ö webhook de pagos: ┬½capturado┬╗ mueve el pedido pagado a ┬½en_proceso┬╗ (57.5959ms)
+Ô£ö compras simult├íneas del mismo producto: el stock nunca queda en negativo ni se vende de m├ís (106.2706ms)
+Ô£ö la base de datos rechaza un stock negativo aunque falle la l├│gica de la aplicaci├│n (4.8649ms)
+Ô£ö compra: un identificador de producto mal formado responde 400, no 500 (16.6459ms)
+Ô£ö compra: un producto inexistente responde 404 y no crea el pedido (22.4969ms)
+Ô£ö webhook de pagos: un estado de pago desconocido responde 400, no 500 (58.6686ms)
+Ô£ö requiere autenticaci├│n (1097.8133ms)
+Ô£ö nivel 3 ┬À sin compras ni navegaci├│n: recomienda la tendencia general del cat├ílogo (54.0919ms)
+Ô£ö nivel 2 ┬À sin compras pero con navegaci├│n: recomienda de las categor├¡as visitadas (33.3418ms)
+Ô£ö nivel 1 ┬À con compras: recomienda de la categor├¡a comprada y excluye lo ya comprado (59.6567ms)
+Ô£ö el puntaje est├í entre 0.5 y 0.99 y las recomendaciones se persisten con su motivo (29.0452ms)
+Ô£ö pedir de nuevo reemplaza las recomendaciones anteriores (no se acumulan) (58.8442ms)
+Ô£ö Circuit Breaker: abre, rechaza sin guardar puja y se recupera tras el enfriamiento (2154.4704ms)
+Ô£ö autorizaci├│n: un cliente no puede acceder al panel administrativo (925.7079ms)
+Ô£ö IDOR: un usuario no puede utilizar la direcci├│n de otro usuario (10.5846ms)
+Ô£ö IDOR: un usuario no ve pedidos ajenos en su listado (12.5419ms)
+Ô£ö IDOR: un usuario no puede pagar el pedido de otro usuario (10.7813ms)
+Ô£ö JWT: token ausente, manipulado y expirado responden 401 (16.1884ms)
+Ô£ö SQL injection: una cadena maliciosa en login no altera la consulta (9.8623ms)
+Ô£ö contrase├▒as: se almacenan con bcrypt y el hash no se expone por la API (12.885ms)
+Ô£ö un producto de subasta se reserva en el pedido sin cobrarlo ni tocar el stock (770.526ms)
+Ô£ö oferta: valida los campos, el tipo de producto y que est├® en el pedido (73.6029ms)
+Ô£ö oferta: no se puede ofertar sobre el pedido de otro usuario (404) (11.8861ms)
+Ô£ö oferta: con YAuctions ca├¡do responde 503 y no registra la puja; la siguiente s├¡ pasa (675.0324ms)
+Ô£ö oferta: con YAuctions sano la puja queda registrada con la respuesta externa (31.9199ms)
+Ô£ö perfil: exige autenticaci├│n (474.5563ms)
+Ô£ö perfil: GET devuelve los datos del usuario, sin direcciones al inicio y sin contrase├▒a (47.7344ms)
+Ô£ö perfil: PUT exige nombre y apellido (10.6517ms)
+Ô£ö perfil: PUT actualiza los datos y reemplaza las direcciones (58.2121ms)
+Ô£ö perfil: una direcci├│n incompleta cancela TODO el cambio (transacci├│n at├│mica) (31.8132ms)
+Ô£ö serves Swagger UI at /api/docs (103.8046ms)
+Ô£ö cursor: codificar y decodificar devuelve el mismo valor (2.4598ms)
+Ô£ö cursor: un cursor corrupto o vac├¡o se ignora (null) (0.294ms)
+Ô£ö limite: usa el valor por defecto si falta o es inv├ílido, y respeta el m├íximo (0.1758ms)
+Ô£ö jwt: el access token lleva sub/email y el refresh token se marca como tipo refresh (5.4032ms)
+Ô£ö jwt: un token alterado no se acepta (0.9349ms)
+Ô£ö con la interfaz externa sana, la oferta se acepta y el circuito sigue cerrado (23.7781ms)
+Ô£ö el cat├ílogo se sirve desde cach├® en la segunda lectura (13.89ms)
+Ô£ö tras 3 fallos consecutivos el circuito se abre y rechaza llamadas sin intentarlas (656.2258ms)
+Ô£ö el circuito abierto pasa a semi-abierto tras el enfriamiento y se cierra con un ├®xito (1040.7198ms)
+Ô£ö si la llamada de prueba del semi-abierto falla, el circuito vuelve a abrirse (1031.9196ms)
+Ôä╣ tests 77
+Ôä╣ suites 0
+Ôä╣ pass 77
+Ôä╣ fail 0
+Ôä╣ cancelled 0
+Ôä╣ skipped 0
+Ôä╣ todo 0
+Ôä╣ duration_ms 6240.5115
+Ôä╣ start of coverage report
+Ôä╣ ---------------------------------------------------------------------------------------------------------------
+Ôä╣ file                         | line % | branch % | funcs % | uncovered lines
+Ôä╣ ---------------------------------------------------------------------------------------------------------------
+Ôä╣ src                          |        |          |         | 
+Ôä╣  adapters                    |        |          |         | 
+Ôä╣   YAuctionsAdapter.js        |  81.44 |    56.67 |   84.62 | 53-55 59-64 108-111 122-124 140-146 151-158
+Ôä╣  app.js                      | 100.00 |   100.00 |  100.00 | 
+Ôä╣  config                      |        |          |         | 
+Ôä╣   db.js                      |  91.43 |    85.71 |   66.67 | 12-14
+Ôä╣  middleware                  |        |          |         | 
+Ôä╣   auth.js                    | 100.00 |    91.30 |  100.00 | 
+Ôä╣   errorHandler.js            |  66.67 |    70.59 |  100.00 | 11-16 18-23 41-45
+Ôä╣  repositories                |        |          |         | 
+Ôä╣   categorias.repository.js   | 100.00 |   100.00 |  100.00 | 
+Ôä╣   productos.repository.js    | 100.00 |    92.31 |  100.00 | 
+Ôä╣   usuarios.repository.js     | 100.00 |    87.50 |  100.00 | 
+Ôä╣  routes                      |        |          |         | 
+Ôä╣   admin.routes.js            | 100.00 |    77.78 |  100.00 | 
+Ôä╣   auth.routes.js             |  97.94 |    75.86 |  100.00 | 54-55
+Ôä╣   categorias.routes.js       | 100.00 |   100.00 |  100.00 | 
+Ôä╣   pedidos.routes.js          |  97.33 |    81.48 |  100.00 | 62-63 127-128 150-152
+Ôä╣   productos.routes.js        | 100.00 |    91.67 |  100.00 | 
+Ôä╣   recomendaciones.routes.js  | 100.00 |   100.00 |  100.00 | 
+Ôä╣   usuarios.routes.js         | 100.00 |    92.86 |  100.00 | 
+Ôä╣   webhooks.routes.js         | 100.00 |    73.33 |  100.00 | 
+Ôä╣  services                    |        |          |         | 
+Ôä╣   recomendaciones.service.js | 100.00 |    90.91 |  100.00 | 
+Ôä╣   tipoCambio.service.js      |  81.82 |   100.00 |   50.00 | 19-22
+Ôä╣  utils                       |        |          |         | 
+Ôä╣   errors.js                  | 100.00 |   100.00 |  100.00 | 
+Ôä╣   jwt.js                     | 100.00 |   100.00 |  100.00 | 
+Ôä╣   pagination.js              | 100.00 |   100.00 |  100.00 | 
+Ôä╣ ---------------------------------------------------------------------------------------------------------------
+Ôä╣ all files                    |  91.59 |    78.01 |   91.41 | 
+Ôä╣ ---------------------------------------------------------------------------------------------------------------
+Ôä╣ end of coverage report
