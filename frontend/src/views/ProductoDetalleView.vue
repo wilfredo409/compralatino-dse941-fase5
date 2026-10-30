@@ -115,7 +115,7 @@ const requiereSesion = computed(() => !sesion.usuario);
         <h2>{{ producto.titulo }}</h2>
         <p style="color:#555">{{ producto.descripcion }}</p>
         <div class="precio" style="font-size:26px">USD {{ producto.precioUsd?.toFixed(2) }}</div>
-        <div style="color:#888;margin-bottom:8px">JPY {{ producto.precioJpy.toLocaleString('es-SV') }} · tasa incl. margen de intermediación</div>
+        <div style="color:var(--texto-secundario);margin-bottom:8px">JPY {{ producto.precioJpy.toLocaleString('es-SV') }} · tasa incl. margen de intermediación</div>
         <span class="etiqueta" :class="{ subasta: producto.tipoVenta === 'subasta' }">
           {{ producto.tipoVenta === 'subasta' ? 'Subasta' : 'Compra directa' }}
         </span>

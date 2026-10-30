@@ -3,6 +3,7 @@
    presentable para esta primera versión funcional. */
 :root {
   --tinta: #1a1a1a;
+  --texto-secundario: #666;
   --acento: #222;
   --borde: #ddd;
   --fondo-suave: #f7f7f7;
@@ -52,7 +53,7 @@ main { padding: 24px 0 48px; }
 .tarjeta h3 { font-size: 14px; margin: 8px 0 4px; }
 .precio { font-weight: 700; font-size: 18px; }
 .etiqueta { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--fondo-suave); color: #555; margin-top: 4px; }
-.etiqueta.subasta { background: #fff3cd; color: var(--aviso); }
+.etiqueta.subasta { background: #fff3cd; color: #725900; }
 
 .btn {
   display: inline-block; padding: 8px 14px; border-radius: 6px; border: none;
