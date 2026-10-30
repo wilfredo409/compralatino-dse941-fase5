@@ -2,17 +2,18 @@
 
 - **Estudiante:** Lucía Milena Hernández Bonilla (HB221258)
 - **Rol Fase 4:** DevOps / QA / Base de Datos
+- **Proyecto:** CompraLatino (DSE941)
 
 ---
 
 ## 1. Matriz de Incidentes y Hallazgos
 
-| ID | Tipo | Descripción | Estado |
-| :--- | :--- | :--- | :--- |
-| **SEC-01** | Seguridad | CORS permisivo (`cors()`) en `backend/src/app.js`. Requiere lista blanca por origen. | Abierto / Mitigación en config |
-| **SEC-02** | Seguridad | Dependencias de desarrollo reportadas en `npm audit` sin impacto directo en runtime. | Documentado |
-| **UI-01** | Interfaz | Ajustes de responsividad y validación de formularios reportados por Frontend (Fernando). | En corrección |
-| **DT-01** | Deuda Técnica | Automatización de pipeline para escaneo dinámico DAST (ZAP) y benchmarks en CI/CD. | Registrado para Fase 5 |
+| ID | Tipo | Severidad | Descripción | Estado / Acción |
+| :--- | :--- | :---: | :--- | :--- |
+| **SEC-03** | Seguridad | **Alta** | Dependencia de producción `body-parser` vulnerable a Denegación de Servicio (DoS) por procesamiento indebido de bytes finales tras un cuerpo comprimido, y `qs` (severidad moderada) en dependencias transitivas de Express. | **Abierto:** Requiere actualización de versión vía PR por parte de Backend (Laura). |
+| **SEC-04** | Seguridad | Media | CORS permisivo (`cors()`) activo en `backend/src/app.js` sin restricción por lista blanca de orígenes. | Documentado para configuración de orígenes permitidos en producción. |
+| **BUG-F1**| Interfaz  | Media | Inconsistencias de alineación responsiva en vistas del catálogo y panel de usuario reportadas por Frontend (Fernando). | En proceso de corrección por Frontend. |
+| **DT-02** | Deuda Téc.| Baja  | Automatización de escaneo dinámico DAST (OWASP ZAP) y pruebas de carga continua con Autocannon. | Registrado para integración en pipeline CI/CD (Fase 5). *(Nota: DT-01 corresponde a las 37 consultas SQL pendientes).* |
 
 ---
 
@@ -47,6 +48,13 @@ Informe completo: [HTML](./lighthouse_ingreso.report.html) · [JSON](./lighthous
 
 ## 3. Acta de Verificación de Calidad
 
-- **Verificado:** Suite completa de pruebas ejecutada con base de pruebas `cl-test-db` en puerto 5433, alcanzando **91.41% de cobertura de líneas** (superando el 80% requerido).
-- **No verificado en local:** Escaneo activo OWASP ZAP y pruebas de estrés distribuidas (registrados bajo deuda técnica DT-01).
-- **Dictamen:** Aprobada la entrega de pruebas unitarias y de integración para la Fase 4, pendiente de consolidación y firma colegiada del equipo.
+- **Verificado en Local:**
+  - Suite de pruebas ejecutada sin fallos ni omisiones contra el contenedor `cl-test-db` en puerto 5433.
+  - Cobertura de líneas alcanzada: **91.41%** (superando el umbral de 80%).
+  - Repetibilidad de suite comprobada en dos ejecuciones consecutivas idénticas (`test_coverage_run1.txt` y `test_coverage_run2.txt`).
+  - Verificación puntual de consistencia referencial ejecutada (`pedidos` → `usuarios`: 0 huérfanos).
+- **No Verificado en Local:**
+  - Proceso de extracción, carga y transformación ETL hacia el esquema analítico `dw`.
+  - Análisis dinámico con OWASP ZAP (asociado a DT-02).
+  - Pruebas de estrés con Autocannon debido a limitaciones de hardware del entorno local.
+- **Dictamen:** Entrega técnica aprobada en sus componentes verificados. Se deja constancia de la vulnerabilidad SEC-03 para mitigación por el área de backend.

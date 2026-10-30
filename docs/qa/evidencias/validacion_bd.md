@@ -8,16 +8,16 @@
 ---
 
 ## 1. Validación de Inicialización y Migraciones (`deploy/db-init`)
-Se verificó el orden de ejecución y consistencia de los scripts DDL en PostgreSQL 16:
-1. `00_schema_fase2.sql`: Creación del modelo relacional transaccional base.
+Se verificó el orden secuencial de los scripts DDL en PostgreSQL 16:
+1. `00_schema_fase2.sql`: Esquema relacional transaccional base (tablas operativas, claves primarias e índices).
 2. `01_migracion_001.sql`: Control de migraciones aditivas de Fase 3.
-3. `02_migracion_002.sql`: Índices y restricciones de integridad referencial.
-4. `03_migracion_003.sql`: Estructuras complementarias de Fase 4.
+3. `02_migracion_002.sql`: Ampliación del tamaño de columna en `usuarios.estado` (defecto resuelto en Fase 3).
+4. `03_migracion_003.sql`: Restricción de verificación `CHECK (stock >= 0)` en catálogo (Fase 3).
 
 ---
 
-## 2. Consulta y Verificación de Claves Foráneas Huérfanas
-Ejecutada directamente sobre el contenedor `cl-test-db` (`compralatino_test`):
+## 2. Verificación Puntual de Claves Foráneas (pedidos → usuarios)
+Se ejecutó una comprobación puntual de integridad referencial entre las tablas operativas `pedidos` y `usuarios` sobre el contenedor activo `cl-test-db` (`compralatino_test`):
 
 ```sql
 SELECT COUNT(*) AS pedidos_huerfanos 
@@ -25,26 +25,20 @@ FROM pedidos p
 LEFT JOIN usuarios u ON p.id_usuario = u.id 
 WHERE u.id IS NULL;
 
-### 2. Archivo: `docs/qa/evidencias/prueba_carga_rendimiento.md`
+```
 
+**Resultado obtenido:**
+```text
+ pedidos_huerfanos 
+-------------------
+                 0
+(1 row)
+```
 
-```markdown
-# Reporte de Pruebas de Carga y Rendimiento (RNF-01) – Fase 4
-
-- **Estudiante:** Lucía Milena Hernández Bonilla (HB221258)
-- **Rol Fase 4:** DevOps / QA / Base de Datos
-- **Proyecto:** CompraLatino (DSE941)
-
----
-
-## 1. Especificaciones del Entorno Local de Pruebas
-- **CPU:** Intel(R) Core(TM) i7-4510U CPU @ 2.00GHz (2 Cores, 4 Hilos)
-- **Sistema Operativo:** Microsoft Windows 64-bit
-- **Motor de Contenedores:** Docker Desktop / PostgreSQL 16-alpine (`cl-test-db`)
+- **Alcance:** Verificación puntual de consistencia referencial en la relación `pedidos.id_usuario = usuarios.id` (0 registros huérfanos). No constituye una auditoría exhaustiva de la totalidad de restricciones del esquema.
 
 ---
 
-## 2. Estado de Ejecución de Autocannon
-- **Estado en ambiente local:** **No ejecutado localmente**.
-- **Justificación técnica:** Debido a limitaciones de hardware y concurrencia local (2 núcleos físicos / 4 hilos), la simulación de ráfagas de 50 conexiones concurrentes genera saturación en el hilo de procesamiento local, afectando la representatividad de la métrica $p90$.
-- **Plan de acción / Deuda Técnica (DT-01):** La ejecución automatizada de pruebas de carga y estrés se delega al pipeline de Integración Continua (CI/CD) bajo agentes dedicados de prueba para la Fase 5.
+## 3. Estado de Validación del Esquema ETL / Data Warehouse
+- **Estado:** **No ejecutado en esta iteración.**
+- **Detalle:** La verificación del proceso ETL hacia el esquema `dw` (`fact_transacciones` y dimensiones analíticas) no fue ejecutada en el ambiente local, quedando pendiente su validación técnica para la siguiente fase.
