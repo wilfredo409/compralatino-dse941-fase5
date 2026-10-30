@@ -105,12 +105,8 @@ const requiereSesion = computed(() => !sesion.usuario);
   </div>
   <div v-else-if="producto">
     <RouterLink to="/">&larr; Volver al catálogo</RouterLink>
-    <div class="producto-detalle">
-      <img
-        class="producto-imagen"
-        :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)"
-        :alt="producto.titulo"
-      />
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:14px">
+      <img :src="producto.imagenes?.[0] || imagenPlaceholder(producto.titulo)" :alt="producto.titulo" style="width:320px;border-radius:8px" />
       <div style="flex:1;min-width:260px">
         <h2>{{ producto.titulo }}</h2>
         <p style="color:#555">{{ producto.descripcion }}</p>
