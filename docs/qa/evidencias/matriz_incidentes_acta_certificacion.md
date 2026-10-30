@@ -2,6 +2,7 @@
 
 - **Estudiante:** Lucía Milena Hernández Bonilla (HB221258)
 - **Rol Fase 4:** DevOps / QA / Base de Datos
+- **Proyecto:** CompraLatino (DSE941)
 
 ---
 
@@ -47,6 +48,13 @@ Informe completo: [HTML](./lighthouse_ingreso.report.html) · [JSON](./lighthous
 
 ## 3. Acta de Verificación de Calidad
 
-- **Verificado:** Suite completa de pruebas ejecutada con base de pruebas `cl-test-db` en puerto 5433, alcanzando **91.41% de cobertura de líneas** (superando el 80% requerido).
-- **No verificado en local:** Escaneo activo OWASP ZAP y pruebas de estrés distribuidas (registrados bajo deuda técnica DT-01).
-- **Dictamen:** Aprobada la entrega de pruebas unitarias y de integración para la Fase 4, pendiente de consolidación y firma colegiada del equipo.
+- **Verificado en Local:**
+  - Suite de pruebas ejecutada sin fallos ni omisiones contra el contenedor `cl-test-db` en puerto 5433.
+  - Cobertura de líneas alcanzada: **91.41%** (superando el umbral de 80%).
+  - Repetibilidad de suite comprobada en dos ejecuciones consecutivas idénticas (`test_coverage_run1.txt` y `test_coverage_run2.txt`).
+  - Verificación puntual de consistencia referencial ejecutada (`pedidos` → `usuarios`: 0 huérfanos).
+- **No Verificado en Local:**
+  - Proceso de extracción, carga y transformación ETL hacia el esquema analítico `dw`.
+  - Análisis dinámico con OWASP ZAP (asociado a DT-02).
+  - Pruebas de estrés con Autocannon debido a limitaciones de hardware del entorno local.
+- **Dictamen:** Entrega técnica aprobada en sus componentes verificados. Se deja constancia de la vulnerabilidad SEC-03 para mitigación por el área de backend.

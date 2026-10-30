@@ -1,0 +1,436 @@
+﻿
+> compralatino-backend@1.0.0 test:coverage
+> node --test --experimental-test-coverage --test-coverage-exclude="test/**" --test-coverage-lines=80 "test/**/*.test.js"
+
+TAP version 13
+# Subtest: sin token todo el panel responde 401
+ok 1 - sin token todo el panel responde 401
+  ---
+  duration_ms: 1867.0682
+  ...
+# Subtest: un cliente no puede usar ninguna ruta del panel (403)
+ok 2 - un cliente no puede usar ninguna ruta del panel (403)
+  ---
+  duration_ms: 56.5879
+  ...
+# Subtest: m├®tricas: devuelve las tarjetas del wireframe W06 con el formato esperado
+ok 3 - m├®tricas: devuelve las tarjetas del wireframe W06 con el formato esperado
+  ---
+  duration_ms: 102.1419
+  ...
+# Subtest: m├®tricas: un pedido con pago rechazado aparece en ┬½requieren atenci├│n┬╗
+ok 4 - m├®tricas: un pedido con pago rechazado aparece en ┬½requieren atenci├│n┬╗
+  ---
+  duration_ms: 49.3665
+  ...
+# Subtest: pedidos: lista paginada por cursor y filtra por estado
+ok 5 - pedidos: lista paginada por cursor y filtra por estado
+  ---
+  duration_ms: 62.6121
+  ...
+# Subtest: reporte de transacciones: exporta CSV con encabezado y el pago del pedido
+ok 6 - reporte de transacciones: exporta CSV con encabezado y el pago del pedido
+  ---
+  duration_ms: 42.3805
+  ...
+# Subtest: usuarios: lista paginada sin exponer la contrase├▒a
+ok 7 - usuarios: lista paginada sin exponer la contrase├▒a
+  ---
+  duration_ms: 24.9176
+  ...
+# Subtest: usuarios (PUT): valida los datos y responde 404 si el usuario no existe
+ok 8 - usuarios (PUT): valida los datos y responde 404 si el usuario no existe
+  ---
+  duration_ms: 64.9157
+  ...
+# Subtest: usuarios (PUT): suspender una cuenta le corta el acceso y queda en la auditor├¡a
+ok 9 - usuarios (PUT): suspender una cuenta le corta el acceso y queda en la auditor├¡a
+  ---
+  duration_ms: 254.4619
+  ...
+# Subtest: auditor├¡a: pagina con cursor
+ok 10 - auditor├¡a: pagina con cursor
+  ---
+  duration_ms: 60.5111
+  ...
+# Subtest: GET /salud responde ok sin autenticaci├│n
+ok 11 - GET /salud responde ok sin autenticaci├│n
+  ---
+  duration_ms: 83.2105
+  ...
+# Subtest: una ruta inexistente devuelve 404 con el formato de error uniforme
+ok 12 - una ruta inexistente devuelve 404 con el formato de error uniforme
+  ---
+  duration_ms: 11.5809
+  ...
+# Subtest: registro: crea la cuenta en pendiente_verificacion y no devuelve la contrase├▒a
+ok 13 - registro: crea la cuenta en pendiente_verificacion y no devuelve la contrase├▒a
+  ---
+  duration_ms: 447.9548
+  ...
+# Subtest: registro: el correo repetido responde 409
+ok 14 - registro: el correo repetido responde 409
+  ---
+  duration_ms: 12.8997
+  ...
+# Subtest: registro: valida campos obligatorios y la longitud de la contrase├▒a
+ok 15 - registro: valida campos obligatorios y la longitud de la contrase├▒a
+  ---
+  duration_ms: 19.3826
+  ...
+# Subtest: login: con credenciales correctas entrega access y refresh token
+ok 16 - login: con credenciales correctas entrega access y refresh token
+  ---
+  duration_ms: 219.4947
+  ...
+# Subtest: login: contrase├▒a incorrecta o usuario inexistente responden 401
+ok 17 - login: contrase├▒a incorrecta o usuario inexistente responden 401
+  ---
+  duration_ms: 276.6581
+  ...
+# Subtest: refresh: un refresh token v├ílido emite un par nuevo; un access token no sirve como refresh
+ok 18 - refresh: un refresh token v├ílido emite un par nuevo; un access token no sirve como refresh
+  ---
+  duration_ms: 262.3576
+  ...
+# Subtest: rutas protegidas: sin token o con token inv├ílido responden 401; con token v├ílido pasan
+ok 19 - rutas protegidas: sin token o con token inv├ílido responden 401; con token v├ílido pasan
+  ---
+  duration_ms: 254.1888
+  ...
+# Subtest: el rol de cliente no accede al panel de administraci├│n (403)
+ok 20 - el rol de cliente no accede al panel de administraci├│n (403)
+  ---
+  duration_ms: 259.2406
+  ...
+# Subtest: cat├ílogo: filtra por categor├¡a y trae los productos con los campos del contrato
+ok 21 - cat├ílogo: filtra por categor├¡a y trae los productos con los campos del contrato
+  ---
+  duration_ms: 192.262
+  ...
+# Subtest: cat├ílogo: filtra por tipo de venta, por rango de precio y por texto
+ok 22 - cat├ílogo: filtra por tipo de venta, por rango de precio y por texto
+  ---
+  duration_ms: 53.7253
+  ...
+# Subtest: cat├ílogo: pagina por cursor sin repetir ni omitir productos
+ok 23 - cat├ílogo: pagina por cursor sin repetir ni omitir productos
+  ---
+  duration_ms: 23.7653
+  ...
+# Subtest: cat├ílogo: el cursor no pierde productos con el mismo instante en microsegundos
+ok 24 - cat├ílogo: el cursor no pierde productos con el mismo instante en microsegundos
+  ---
+  duration_ms: 39.4134
+  ...
+# Subtest: ficha de producto: devuelve el detalle con sus im├ígenes
+ok 25 - ficha de producto: devuelve el detalle con sus im├ígenes
+  ---
+  duration_ms: 14.0062
+  ...
+# Subtest: ficha de producto: 404 si no existe y 400 (no 500) si el identificador no es v├ílido
+ok 26 - ficha de producto: 404 si no existe y 400 (no 500) si el identificador no es v├ílido
+  ---
+  duration_ms: 25.339
+  ...
+# Subtest: categor├¡as: devuelve el ├írbol con las subcategor├¡as anidadas
+ok 27 - categor├¡as: devuelve el ├írbol con las subcategor├¡as anidadas
+  ---
+  duration_ms: 35.8058
+  ...
+# Subtest: SEC-01: registro rechaza nombre mayor a 80 caracteres con 400
+ok 28 - SEC-01: registro rechaza nombre mayor a 80 caracteres con 400
+  ---
+  duration_ms: 136.2667
+  ...
+# Subtest: SEC-02: registro rechaza nombre con tipo incorrecto con 400
+ok 29 - SEC-02: registro rechaza nombre con tipo incorrecto con 400
+  ---
+  duration_ms: 15.3061
+  ...
+# Subtest: compra directa: calcula subtotal, flete fijo (12) y comisi├│n (5 %) y descuenta el stock
+ok 30 - compra directa: calcula subtotal, flete fijo (12) y comisi├│n (5 %) y descuenta el stock
+  ---
+  duration_ms: 1293.6063
+  ...
+# Subtest: compra directa: sin stock suficiente responde 409 y no cambia el stock
+ok 31 - compra directa: sin stock suficiente responde 409 y no cambia el stock
+  ---
+  duration_ms: 23.4709
+  ...
+# Subtest: compra: valida los datos de entrada y que la direcci├│n sea del usuario
+ok 32 - compra: valida los datos de entrada y que la direcci├│n sea del usuario
+  ---
+  duration_ms: 28.2648
+  ...
+# Subtest: un usuario no puede ver ni pagar el pedido de otro (404)
+ok 33 - un usuario no puede ver ni pagar el pedido de otro (404)
+  ---
+  duration_ms: 51.3662
+  ...
+# Subtest: pago: autoriza el pago, el pedido pasa a ┬½pagado┬╗ y un segundo pago se rechaza (409)
+ok 34 - pago: autoriza el pago, el pedido pasa a ┬½pagado┬╗ y un segundo pago se rechaza (409)
+  ---
+  duration_ms: 78.0484
+  ...
+# Subtest: webhook de pagos: sin firma v├ílida se rechaza (401)
+ok 35 - webhook de pagos: sin firma v├ílida se rechaza (401)
+  ---
+  duration_ms: 10.6095
+  ...
+# Subtest: webhook de pagos: ┬½rechazado┬╗ deja el pedido ┬½cancelado┬╗ (coherente con el panel admin)
+ok 36 - webhook de pagos: ┬½rechazado┬╗ deja el pedido ┬½cancelado┬╗ (coherente con el panel admin)
+  ---
+  duration_ms: 88.8284
+  ...
+# Subtest: webhook de pagos: ┬½capturado┬╗ mueve el pedido pagado a ┬½en_proceso┬╗
+ok 37 - webhook de pagos: ┬½capturado┬╗ mueve el pedido pagado a ┬½en_proceso┬╗
+  ---
+  duration_ms: 65.7893
+  ...
+# Subtest: compras simult├íneas del mismo producto: el stock nunca queda en negativo ni se vende de m├ís
+ok 38 - compras simult├íneas del mismo producto: el stock nunca queda en negativo ni se vende de m├ís
+  ---
+  duration_ms: 271.7397
+  ...
+# Subtest: la base de datos rechaza un stock negativo aunque falle la l├│gica de la aplicaci├│n
+ok 39 - la base de datos rechaza un stock negativo aunque falle la l├│gica de la aplicaci├│n
+  ---
+  duration_ms: 7.5142
+  ...
+# Subtest: compra: un identificador de producto mal formado responde 400, no 500
+ok 40 - compra: un identificador de producto mal formado responde 400, no 500
+  ---
+  duration_ms: 24.8819
+  ...
+# Subtest: compra: un producto inexistente responde 404 y no crea el pedido
+ok 41 - compra: un producto inexistente responde 404 y no crea el pedido
+  ---
+  duration_ms: 25.593
+  ...
+# Subtest: webhook de pagos: un estado de pago desconocido responde 400, no 500
+ok 42 - webhook de pagos: un estado de pago desconocido responde 400, no 500
+  ---
+  duration_ms: 76.9846
+  ...
+# Subtest: requiere autenticaci├│n
+ok 43 - requiere autenticaci├│n
+  ---
+  duration_ms: 1902.122
+  ...
+# Subtest: nivel 3 ┬À sin compras ni navegaci├│n: recomienda la tendencia general del cat├ílogo
+ok 44 - nivel 3 ┬À sin compras ni navegaci├│n: recomienda la tendencia general del cat├ílogo
+  ---
+  duration_ms: 67.5037
+  ...
+# Subtest: nivel 2 ┬À sin compras pero con navegaci├│n: recomienda de las categor├¡as visitadas
+ok 45 - nivel 2 ┬À sin compras pero con navegaci├│n: recomienda de las categor├¡as visitadas
+  ---
+  duration_ms: 39.3617
+  ...
+# Subtest: nivel 1 ┬À con compras: recomienda de la categor├¡a comprada y excluye lo ya comprado
+ok 46 - nivel 1 ┬À con compras: recomienda de la categor├¡a comprada y excluye lo ya comprado
+  ---
+  duration_ms: 65.3602
+  ...
+# Subtest: el puntaje est├í entre 0.5 y 0.99 y las recomendaciones se persisten con su motivo
+ok 47 - el puntaje est├í entre 0.5 y 0.99 y las recomendaciones se persisten con su motivo
+  ---
+  duration_ms: 32.4078
+  ...
+# Subtest: pedir de nuevo reemplaza las recomendaciones anteriores (no se acumulan)
+ok 48 - pedir de nuevo reemplaza las recomendaciones anteriores (no se acumulan)
+  ---
+  duration_ms: 74.8287
+  ...
+# Subtest: Circuit Breaker: abre, rechaza sin guardar puja y se recupera tras el enfriamiento
+ok 49 - Circuit Breaker: abre, rechaza sin guardar puja y se recupera tras el enfriamiento
+  ---
+  duration_ms: 2862.265
+  ...
+# Subtest: autorizaci├│n: un cliente no puede acceder al panel administrativo
+ok 50 - autorizaci├│n: un cliente no puede acceder al panel administrativo
+  ---
+  duration_ms: 1755.1456
+  ...
+# Subtest: IDOR: un usuario no puede utilizar la direcci├│n de otro usuario
+ok 51 - IDOR: un usuario no puede utilizar la direcci├│n de otro usuario
+  ---
+  duration_ms: 20.2647
+  ...
+# Subtest: IDOR: un usuario no ve pedidos ajenos en su listado
+ok 52 - IDOR: un usuario no ve pedidos ajenos en su listado
+  ---
+  duration_ms: 24.291
+  ...
+# Subtest: IDOR: un usuario no puede pagar el pedido de otro usuario
+ok 53 - IDOR: un usuario no puede pagar el pedido de otro usuario
+  ---
+  duration_ms: 19.2506
+  ...
+# Subtest: JWT: token ausente, manipulado y expirado responden 401
+ok 54 - JWT: token ausente, manipulado y expirado responden 401
+  ---
+  duration_ms: 32.7958
+  ...
+# Subtest: SQL injection: una cadena maliciosa en login no altera la consulta
+ok 55 - SQL injection: una cadena maliciosa en login no altera la consulta
+  ---
+  duration_ms: 34.5024
+  ...
+# Subtest: contrase├▒as: se almacenan con bcrypt y el hash no se expone por la API
+ok 56 - contrase├▒as: se almacenan con bcrypt y el hash no se expone por la API
+  ---
+  duration_ms: 26.5584
+  ...
+# Subtest: un producto de subasta se reserva en el pedido sin cobrarlo ni tocar el stock
+ok 57 - un producto de subasta se reserva en el pedido sin cobrarlo ni tocar el stock
+  ---
+  duration_ms: 1737.6874
+  ...
+# Subtest: oferta: valida los campos, el tipo de producto y que est├® en el pedido
+ok 58 - oferta: valida los campos, el tipo de producto y que est├® en el pedido
+  ---
+  duration_ms: 116.3748
+  ...
+# Subtest: oferta: no se puede ofertar sobre el pedido de otro usuario (404)
+ok 59 - oferta: no se puede ofertar sobre el pedido de otro usuario (404)
+  ---
+  duration_ms: 15.8713
+  ...
+# Subtest: oferta: con YAuctions ca├¡do responde 503 y no registra la puja; la siguiente s├¡ pasa
+ok 60 - oferta: con YAuctions ca├¡do responde 503 y no registra la puja; la siguiente s├¡ pasa
+  ---
+  duration_ms: 728.6306
+  ...
+# Subtest: oferta: con YAuctions sano la puja queda registrada con la respuesta externa
+ok 61 - oferta: con YAuctions sano la puja queda registrada con la respuesta externa
+  ---
+  duration_ms: 34.823
+  ...
+# Subtest: perfil: exige autenticaci├│n
+ok 62 - perfil: exige autenticaci├│n
+  ---
+  duration_ms: 994.2203
+  ...
+# Subtest: perfil: GET devuelve los datos del usuario, sin direcciones al inicio y sin contrase├▒a
+ok 63 - perfil: GET devuelve los datos del usuario, sin direcciones al inicio y sin contrase├▒a
+  ---
+  duration_ms: 30.4627
+  ...
+# Subtest: perfil: PUT exige nombre y apellido
+ok 64 - perfil: PUT exige nombre y apellido
+  ---
+  duration_ms: 18.5547
+  ...
+# Subtest: perfil: PUT actualiza los datos y reemplaza las direcciones
+ok 65 - perfil: PUT actualiza los datos y reemplaza las direcciones
+  ---
+  duration_ms: 75.5011
+  ...
+# Subtest: perfil: una direcci├│n incompleta cancela TODO el cambio (transacci├│n at├│mica)
+ok 66 - perfil: una direcci├│n incompleta cancela TODO el cambio (transacci├│n at├│mica)
+  ---
+  duration_ms: 52.5214
+  ...
+# Subtest: serves Swagger UI at /api/docs
+ok 67 - serves Swagger UI at /api/docs
+  ---
+  duration_ms: 45.1455
+  ...
+# Subtest: cursor: codificar y decodificar devuelve el mismo valor
+ok 68 - cursor: codificar y decodificar devuelve el mismo valor
+  ---
+  duration_ms: 4.6868
+  ...
+# Subtest: cursor: un cursor corrupto o vac├¡o se ignora (null)
+ok 69 - cursor: un cursor corrupto o vac├¡o se ignora (null)
+  ---
+  duration_ms: 0.6635
+  ...
+# Subtest: limite: usa el valor por defecto si falta o es inv├ílido, y respeta el m├íximo
+ok 70 - limite: usa el valor por defecto si falta o es inv├ílido, y respeta el m├íximo
+  ---
+  duration_ms: 0.579
+  ...
+# Subtest: jwt: el access token lleva sub/email y el refresh token se marca como tipo refresh
+ok 71 - jwt: el access token lleva sub/email y el refresh token se marca como tipo refresh
+  ---
+  duration_ms: 16.9745
+  ...
+# Subtest: jwt: un token alterado no se acepta
+ok 72 - jwt: un token alterado no se acepta
+  ---
+  duration_ms: 7.2655
+  ...
+# Subtest: con la interfaz externa sana, la oferta se acepta y el circuito sigue cerrado
+ok 73 - con la interfaz externa sana, la oferta se acepta y el circuito sigue cerrado
+  ---
+  duration_ms: 70.2849
+  ...
+# Subtest: el cat├ílogo se sirve desde cach├® en la segunda lectura
+ok 74 - el cat├ílogo se sirve desde cach├® en la segunda lectura
+  ---
+  duration_ms: 27.4633
+  ...
+# Subtest: tras 3 fallos consecutivos el circuito se abre y rechaza llamadas sin intentarlas
+ok 75 - tras 3 fallos consecutivos el circuito se abre y rechaza llamadas sin intentarlas
+  ---
+  duration_ms: 662.555
+  ...
+# Subtest: el circuito abierto pasa a semi-abierto tras el enfriamiento y se cierra con un ├®xito
+ok 76 - el circuito abierto pasa a semi-abierto tras el enfriamiento y se cierra con un ├®xito
+  ---
+  duration_ms: 1027.7395
+  ...
+# Subtest: si la llamada de prueba del semi-abierto falla, el circuito vuelve a abrirse
+ok 77 - si la llamada de prueba del semi-abierto falla, el circuito vuelve a abrirse
+  ---
+  duration_ms: 1020.2864
+  ...
+1..77
+# tests 77
+# suites 0
+# pass 77
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16569.8593
+# start of coverage report
+# ---------------------------------------------------------------------------------------------------------------
+# file                         | line % | branch % | funcs % | uncovered lines
+# ---------------------------------------------------------------------------------------------------------------
+# src                          |        |          |         | 
+#  adapters                    |        |          |         | 
+#   YAuctionsAdapter.js        |  81.44 |    56.67 |   84.62 | 53-55 59-64 108-111 122-124 140-146 151-158
+#  app.js                      | 100.00 |   100.00 |  100.00 | 
+#  config                      |        |          |         | 
+#   db.js                      |  91.43 |    85.71 |   66.67 | 12-14
+#  middleware                  |        |          |         | 
+#   auth.js                    | 100.00 |    87.50 |  100.00 | 
+#   errorHandler.js            |  66.67 |    70.59 |  100.00 | 11-16 18-23 41-45
+#  repositories                |        |          |         | 
+#   categorias.repository.js   | 100.00 |   100.00 |  100.00 | 
+#   productos.repository.js    | 100.00 |    92.31 |  100.00 | 
+#   usuarios.repository.js     | 100.00 |    87.50 |  100.00 | 
+#  routes                      |        |          |         | 
+#   admin.routes.js            | 100.00 |    77.78 |  100.00 | 
+#   auth.routes.js             |  97.94 |    75.86 |  100.00 | 54-55
+#   categorias.routes.js       | 100.00 |   100.00 |  100.00 | 
+#   pedidos.routes.js          |  97.33 |    81.48 |  100.00 | 62-63 127-128 150-152
+#   productos.routes.js        | 100.00 |    91.67 |  100.00 | 
+#   recomendaciones.routes.js  | 100.00 |   100.00 |  100.00 | 
+#   usuarios.routes.js         | 100.00 |    92.86 |  100.00 | 
+#   webhooks.routes.js         | 100.00 |    73.33 |  100.00 | 
+#  services                    |        |          |         | 
+#   recomendaciones.service.js | 100.00 |    90.91 |  100.00 | 
+#   tipoCambio.service.js      |  81.82 |   100.00 |   50.00 | 19-22
+#  utils                       |        |          |         | 
+#   errors.js                  | 100.00 |   100.00 |  100.00 | 
+#   jwt.js                     | 100.00 |   100.00 |  100.00 | 
+#   pagination.js              | 100.00 |   100.00 |  100.00 | 
+# ---------------------------------------------------------------------------------------------------------------
+# all files                    |  91.59 |    77.85 |   91.41 | 
+# ---------------------------------------------------------------------------------------------------------------
+# end of coverage report
