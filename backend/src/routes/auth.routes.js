@@ -69,10 +69,10 @@ authRouter.post(
     if (!email || !password) throw ErrorValidacion('email y password son obligatorios');
 
     const { rows } = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
-    if (rows.length === 0) throw ErrorAutenticacion();
+    if (rows.length === 0) throw ErrorAutenticacion('Correo o contraseña incorrectos');
 
     const ok = await bcrypt.compare(password, rows[0].password_hash);
-    if (!ok) throw ErrorAutenticacion();
+    if (!ok) throw ErrorAutenticacion('Correo o contraseña incorrectos');
 
     res.json(emitirTokenPar(rows[0]));
   })
