@@ -1,7 +1,8 @@
 # Pruebas reproducibles de CompraLatino
 
-Recorre en un navegador real el flujo completo: catálogo, registro/login, compra directa con pago,
-oferta de subasta con Circuit Breaker, recomendaciones y panel administrativo.
+El humo de navegador comprueba el catálogo y sus imágenes, búsqueda y filtros, ingreso y permisos,
+recomendaciones, cuenta, compra y puja simuladas, navegación responsiva y el panel administrativo.
+La suite de backend cubre el registro y las transiciones del Circuit Breaker.
 
 ```bash
 # 1) Tener corriendo backend (:3000), frontend (:5173) y la BD sembrada (ver ../README.md)

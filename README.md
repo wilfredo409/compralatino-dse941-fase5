@@ -4,6 +4,8 @@ Plataforma de intermediación de compras desarrollada por el equipo de DSE941 en
 
 El sistema tiene cinco módulos: cuentas, catálogo, compras, recomendaciones y administración. Incluye una SPA Vue 3, una API REST Express en Node.js 22, PostgreSQL 16 y un almacén dimensional con scripts ETL. La interfaz de YAuctions y la pasarela de pago se simulan. Usa datos y credenciales de demostración exclusivamente en un ambiente de pruebas.
 
+El catálogo académico ofrece 36 artículos de Japón en nueve categorías. El menú de tienda separa compra directa y subastas. Las fichas detalladas muestran el desglose en USD o la puja en JPY. Los clientes gestionan perfil, direcciones y pedidos, y los administradores cuentan con un menú para resumen, pedidos, usuarios, reportes y auditoría.
+
 ## Inicio rápido
 
 Requiere Docker con Compose v2. Copia `.env.example` a `.env` en la raíz y asigna tres secretos distintos. Usa una contraseña hexadecimal para PostgreSQL porque se incluye en una URI.
@@ -17,7 +19,8 @@ docker compose exec backend npm run seed       # Solo en una base académica vac
 - Aplicación en `http://127.0.0.1:8080`.
 - Swagger en `http://127.0.0.1:8080/api/docs/`.
 - Disponibilidad en `http://127.0.0.1:8080/api/v1/salud/listo`.
-- Cuentas locales en `backend/db/seed.js`. El panel y el reporte CSV requieren rol de administrador.
+- La aplicación arranca en tu equipo. Este repositorio público distribuye el código, las imágenes y los manuales.
+- Cuentas sintéticas de la instalación local en `backend/db/seed.js`. El panel y el reporte CSV requieren rol de administrador.
 
 Para desarrollo sin Docker, crea una base PostgreSQL vacía, aplica en orden `deploy/db-init/*.sql` con `psql -v ON_ERROR_STOP=1 -f archivo.sql` y configura `backend/.env` a partir de su ejemplo. En `backend`, ejecuta `npm ci`, `npm run seed` y `npm start`. En `frontend`, ejecuta `npm ci --legacy-peer-deps` y `npm run dev` para abrir `http://127.0.0.1:5173`.
 
@@ -26,6 +29,7 @@ Para desarrollo sin Docker, crea una base PostgreSQL vacía, aplica en orden `de
 - [Despliegue, copias, actualizaciones y reversión](GUIA_DESPLIEGUE_AWS.md)
 - [Operación del ETL y Power BI](docs/bi/operacion.md)
 - [Manual de usuario](docs/fase5/manual-usuario.md)
+- [Resultados de la verificación de la versión](docs/fase5/verificacion.md)
 - [Pruebas reproducibles](pruebas/README.md)
 - [Procedencia de las imágenes del catálogo](docs/fase5/creditos-imagenes.md)
 - [Plan de pruebas y resultados heredados](docs/qa/evidencias/plan_pruebas_qa.md)

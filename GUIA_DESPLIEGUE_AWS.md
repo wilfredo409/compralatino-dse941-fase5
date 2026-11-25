@@ -13,6 +13,12 @@ AWS us-east-1, EC2 Linux t3.small con EBS gp3 de 20 GiB para el piloto. Docker C
 5. Prueba la redirección y verifica HTTPS con `curl --fail --tlsv1.3 --tls-max 1.3 https://DOMINIO/api/v1/salud/listo`. Confirma la renovación del certificado. Recorre el flujo con datos sintéticos, revisa Swagger, exporta CSV como administrador y registra UTC, versión, resultado, operador y URL.
 6. Habilita [el ETL](docs/bi/operacion.md) y conserva su salida en la bitácora. Revisa que el respaldo pueda restaurarse en una base separada. Una persona distinta del operador debe revisar la evidencia antes de promover la versión.
 
+### Actualización del catálogo académico
+
+Para actualizar una base de demostración existente, registra la versión anterior, respalda y reconstruye los servicios desde el commit revisado. Luego ejecuta `docker compose exec backend npm run catalogo:demo`. El proceso actualiza las fichas de demostración por su referencia, agrega las nuevas y conserva los identificadores y el inventario existente. La ejecución repetida deja el mismo surtido. En una base de demostración vacía basta con ejecutar `npm run seed`.
+
+Comprueba que se sirven las imágenes, revisa el desglose de una compra directa y la ficha de una subasta, y ejecuta el [humo de navegador](pruebas/README.md). Corre y concilia el ETL para que las nuevas referencias estén disponibles en el almacén dimensional.
+
 ### Respaldo y restauración
 
 En el servidor Linux crea un directorio de respaldos fuera del repositorio, con permisos para el operador. Programa al menos un respaldo diario y guarda una copia cifrada fuera del host. RPO propuesto: 24 horas. RTO propuesto: 4 horas. Conserva 7 diarios y 4 semanales conforme a la política de datos del entorno.
