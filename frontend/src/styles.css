@@ -123,8 +123,8 @@ button.enlace-header { border: 0; background: transparent; padding: 0; }
 .rejilla { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 13px; }
 .producto-card { position: relative; min-width: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0; color: var(--tinta); text-decoration: none; transition: box-shadow .19s ease, border-color .19s ease; }
 .producto-card:hover { border-color: #a5bdae; box-shadow: 0 11px 24px rgba(26, 55, 42, .105); }
-.producto-miniatura { position: relative; background: #f2f1ea; aspect-ratio: 1.34; }
-.producto-miniatura img { width: 100%; height: 100%; object-fit: contain; padding: 4px; mix-blend-mode: multiply; }
+.producto-miniatura { position: relative; flex: none; background: #f2f1ea; aspect-ratio: 1.34; }
+.producto-miniatura img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 4px; mix-blend-mode: multiply; }
 .etiqueta { display: inline-flex; align-items: center; border-radius: 20px; padding: 4px 8px; background: #e6f1e8; color: #195341; font-size: .71rem; font-weight: 750; white-space: nowrap; }
 .etiqueta.subasta { background: #f6e5dc; color: #853522; }
 .producto-miniatura .etiqueta { position: absolute; top: 9px; left: 9px; }

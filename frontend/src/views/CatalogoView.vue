@@ -173,12 +173,12 @@ onMounted(async () => {
         <div class="filtros">
           <label for="filtro-categoria">Categoría</label>
           <select id="filtro-categoria" :value="filtros.categoria" @change="aplicar({ categoria: $event.target.value })">
-            <option value="">Todas las categorías</option>
+            <option value="">Todas</option>
             <option v-for="categoria in categorias" :key="categoria.id" :value="String(categoria.id)">{{ '— '.repeat(categoria.nivel) }}{{ categoria.nombre }}</option>
           </select>
           <label for="filtro-tipo">Modalidad</label>
           <select id="filtro-tipo" :value="filtros.tipoVenta" @change="aplicar({ tipoVenta: $event.target.value })">
-            <option value="">Todas las modalidades</option><option value="fijo">Compra directa</option><option value="subasta">Subasta</option>
+            <option value="">Todas</option><option value="fijo">Compra directa</option><option value="subasta">Subasta</option>
           </select>
           <form class="precio-filtro" @submit.prevent="aplicarPrecio">
             <fieldset>
