@@ -13,16 +13,34 @@ import { recomendacionesRouter } from './routes/recomendaciones.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { webhooksRouter } from './routes/webhooks.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { query } from './config/db.js';
 
 export const app = express();
 const openApiDocument = parse(readFileSync(new URL('../../openapi.yaml', import.meta.url), 'utf8'));
+const allowedOrigins = new Set((process.env.CORS_ALLOWED_ORIGINS || '')
+  .split(',').map((origin) => origin.trim()).filter(Boolean));
 
-app.use(cors());
+app.disable('x-powered-by');
+app.use(cors({
+  origin: (origin, callback) => callback(null, allowedOrigins.has(origin)),
+}));
+app.use('/api/v1/webhooks/pagos', express.json({
+  verify: (req, res, buffer) => { req.cuerpoCrudo = buffer; },
+}));
 app.use(express.json());
 
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.get('/api/v1/salud', (req, res) => res.json({ ok: true, servicio: 'compralatino-api', version: '1.0.0' }));
+app.get('/api/v1/salud/listo', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    await query('SELECT 1 FROM pedidos LIMIT 1');
+    res.json({ ok: true, baseDatos: 'disponible' });
+  } catch {
+    res.status(503).json({ ok: false, baseDatos: 'no_disponible' });
+  }
+});
 
 // Rutas por módulo, tal como las agrupa openapi.yaml (M1..M5)
 app.use('/api/v1/auth', authRouter);

@@ -76,6 +76,21 @@ test('métricas: un pedido con pago rechazado aparece en «requieren atención»
   assert.equal(fila.montoUsd, pedido.totalUsd);
 });
 
+test('cuadro de mando: restringe el rol y compara periodos admitidos', { skip: SIN_BD }, async () => {
+  const ruta = '/api/v1/admin/cuadro-mando';
+  assert.equal((await request(app).get(ruta)).status, 401);
+  assert.equal((await request(app).get(ruta).set(auth(cliente))).status, 403);
+  assert.equal((await request(app).get(`${ruta}?dias=13`).set(auth(admin))).status, 400);
+  const res = await request(app).get(`${ruta}?dias=7`).set(auth(admin));
+  assert.equal(res.status, 200);
+  assert.equal(res.body.dias, 7);
+  for (const periodo of [res.body.actual, res.body.anterior]) {
+    assert.ok(periodo.ventasUsd >= 0);
+    assert.ok(periodo.compradores <= periodo.pedidos);
+    assert.ok(periodo.pedidosEntregadosPorcentaje === null || periodo.pedidosEntregadosPorcentaje <= 100);
+  }
+});
+
 test('pedidos: lista paginada por cursor y filtra por estado', { skip: SIN_BD }, async () => {
   const filtrados = await request(app).get('/api/v1/admin/pedidos?estado=cancelado&limite=100').set(auth(admin));
   assert.equal(filtrados.status, 200);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
-import { query, withTransaction } from '../config/db.js';
+import { aplicarResultadoPago } from '../repositories/pagos.repository.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { ErrorAutenticacion, ErrorValidacion } from '../utils/errors.js';
 import 'dotenv/config';
@@ -17,30 +17,21 @@ webhooksRouter.post(
   '/pagos',
   asyncHandler(async (req, res) => {
     const firmaRecibida = req.headers['x-signature'];
-    const secreto = process.env.WEBHOOK_SECRET || '';
-    const cuerpoCrudo = JSON.stringify(req.body || {});
-    const firmaEsperada = crypto.createHmac('sha256', secreto).update(cuerpoCrudo).digest('hex');
-
-    if (!firmaRecibida || firmaRecibida !== firmaEsperada) {
+    const secreto = process.env.WEBHOOK_SECRET;
+    if (!secreto || !req.cuerpoCrudo || typeof firmaRecibida !== 'string' || !/^[0-9a-f]{64}$/i.test(firmaRecibida)) {
+      throw ErrorAutenticacion('Firma de webhook inválida');
+    }
+    const firmaEsperada = crypto.createHmac('sha256', secreto).update(req.cuerpoCrudo).digest();
+    if (!crypto.timingSafeEqual(Buffer.from(firmaRecibida, 'hex'), firmaEsperada)) {
       throw ErrorAutenticacion('Firma de webhook inválida');
     }
 
     const { idPedido, estadoPago } = req.body || {};
-    if (!idPedido || !estadoPago) throw ErrorValidacion('idPedido y estadoPago son obligatorios');
+    if (!idPedido || !['autorizado', 'capturado', 'rechazado'].includes(estadoPago)) {
+      throw ErrorValidacion('Se requiere idPedido y un estado de pago válido');
+    }
 
-    await withTransaction(async (client) => {
-      await client.query('UPDATE pagos SET estado = $1 WHERE id_pedido = $2', [estadoPago, idPedido]);
-      if (estadoPago === 'capturado') {
-        await client.query("UPDATE pedidos SET estado = 'en_proceso' WHERE id = $1 AND estado = 'pagado'", [idPedido]);
-      } else if (estadoPago === 'rechazado') {
-        await client.query("UPDATE pedidos SET estado = 'cancelado' WHERE id = $1", [idPedido]);
-      }
-      await client.query(
-        `INSERT INTO auditoria (accion, entidad, id_entidad, datos_previos)
-         VALUES ('WEBHOOK_PAGO', 'pedidos', $1, $2::jsonb)`,
-        [idPedido, JSON.stringify({ estadoPago })]
-      );
-    });
+    await aplicarResultadoPago(idPedido, estadoPago);
 
     res.status(200).json({ recibido: true });
   })

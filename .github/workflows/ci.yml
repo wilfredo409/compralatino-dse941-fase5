@@ -43,6 +43,18 @@ jobs:
         run: for f in ../deploy/db-init/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"; done
       - name: Pruebas automatizadas con cobertura minima (unitarias y de API)
         run: npm run test:coverage
+      - name: Cargar y conciliar el almacén dimensional dos veces
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE compralatino_bi'
+          export DATABASE_URL="${DATABASE_URL%/*}/compralatino_bi"
+          for f in ../deploy/db-init/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"; done
+          npm run seed
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/F1_ddl_dw.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/F2_etl.sql
+          for i in 1 2; do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/ejecutar_etl.sql
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/verificar_etl.sql
+          done
 
   frontend:
     name: Frontend (construccion)

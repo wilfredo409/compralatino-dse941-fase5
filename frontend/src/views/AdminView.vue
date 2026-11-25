@@ -1,10 +1,31 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '../api.js';
+import CuadroMando from '../components/CuadroMando.vue';
 
 const metricas = ref(null);
 const cargando = ref(true);
 const error = ref('');
+const errorReporte = ref('');
+const exportando = ref(false);
+
+async function exportarTransacciones() {
+  errorReporte.value = '';
+  exportando.value = true;
+  try {
+    const csv = await api.get('/admin/reportes/transacciones');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = 'transacciones.csv';
+    enlace.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    errorReporte.value = e.message;
+  } finally {
+    exportando.value = false;
+  }
+}
 
 onMounted(async () => {
   try {
@@ -70,9 +91,11 @@ onMounted(async () => {
     </div>
 
     <p style="margin-top:16px">
-      <a class="btn secundario" href="/api/v1/admin/reportes/transacciones" target="_blank" rel="noopener">
-        Exportar reporte de transacciones (CSV)
-      </a>
+      <button class="btn secundario" type="button" :disabled="exportando" @click="exportarTransacciones">
+        {{ exportando ? 'Exportando…' : 'Exportar reporte de transacciones (CSV)' }}
+      </button>
     </p>
+    <p v-if="errorReporte" role="alert" class="alerta error">{{ errorReporte }}</p>
+    <CuadroMando />
   </div>
 </template>

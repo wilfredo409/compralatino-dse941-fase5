@@ -155,6 +155,35 @@ await paso('ver panel administrativo con métricas', async () => {
   if (!texto.includes('Salud de la integración con YAuctions')) throw new Error('no se ve el bloque de salud de YAuctions');
 });
 
+await paso('comparar indicadores ejecutivos en escritorio, tableta y teléfono', async () => {
+  const cuadro = page.getByRole('region', { name: 'Cuadro de mando ejecutivo' });
+  for (const width of [1280, 768, 375]) {
+    await page.setViewportSize({ width, height: 900 });
+    await cuadro.getByRole('table').waitFor();
+    if (await cuadro.evaluate((el) => el.scrollWidth > el.clientWidth + 1)) {
+      throw new Error(`desbordamiento del cuadro ejecutivo a ${width} px`);
+    }
+  }
+  const [resultado] = await Promise.all([
+    page.waitForResponse((r) => r.url().endsWith('/admin/cuadro-mando?dias=7')),
+    cuadro.getByLabel('Periodo de análisis').selectOption('7'),
+  ]);
+  if (!resultado.ok() || (await resultado.json()).dias !== 7) throw new Error('no se aplicó el filtro de periodo');
+  await cuadro.getByRole('table').waitFor();
+  await cuadro.getByRole('slider').press('ArrowRight');
+  if (!(await cuadro.innerText()).includes('5 %')) throw new Error('el escenario no refleja la variación');
+});
+
+await paso('exportar el reporte de transacciones con la sesión de administrador', async () => {
+  const [archivo] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Exportar reporte/ }).click(),
+  ]);
+  if (archivo.suggestedFilename() !== 'transacciones.csv' || await archivo.failure()) {
+    throw new Error('no se descargó el CSV esperado');
+  }
+});
+
 if (errores.length) {
   console.log('--- Errores de consola/página detectados ---');
   console.log(errores.join('\n'));

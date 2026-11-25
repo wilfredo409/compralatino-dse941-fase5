@@ -95,22 +95,39 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
  
--- ---------- fact_ventas (incremental por marca de agua) ----------
--- Los estados de public.pedidos (minusculas, 6 valores del esquema) se
--- traducen al catalogo de 9 estados de dw.dim_estado_pedido (Figura 11).
--- Subtotal, flete y comision del pedido se prorratean entre sus lineas
--- segun el subtotal de cada linea, para que SUM(total_usd) no duplique pedidos.
+-- ---------- fact_ventas ----------
+-- Sin fecha mínima se reconcilian también cambios de estado de pedidos antiguos.
+-- Las partidas se agrupan por producto. El último producto recibe el residuo
+-- de redondeo para que los importes del DW coincidan con los de la cabecera.
 CREATE OR REPLACE PROCEDURE dw.sp_cargar_fact_ventas(IN p_desde TIMESTAMPTZ DEFAULT NULL)
 LANGUAGE plpgsql AS $$
 DECLARE
-    v_desde TIMESTAMPTZ := COALESCE(
-        p_desde,
-        (SELECT MAX(fecha_fin) - INTERVAL '2 hours' FROM dw.etl_log
-         WHERE proceso = 'fact_ventas' AND estado = 'EXITOSO'),
-        '2000-01-01'
-    );
     v_filas INT;
 BEGIN
+    WITH lineas AS (
+      SELECT pe.id AS pedido, dt.id_producto, SUM(dt.cantidad)::INT AS cantidad,
+             SUM(dt.cantidad * dt.precio_unitario_usd) AS valor
+      FROM public.pedidos pe
+      JOIN public.pedido_detalle dt ON pe.id = dt.id_pedido
+      WHERE (p_desde IS NULL OR pe.fecha_creacion > p_desde)
+        AND pe.estado <> 'creado'
+      GROUP BY pe.id, dt.id_producto
+    ), pesos AS (
+      SELECT l.*, COALESCE(valor / NULLIF(SUM(valor) OVER pedido, 0), 1.0 / COUNT(*) OVER pedido) AS peso
+      FROM lineas l WINDOW pedido AS (PARTITION BY l.pedido)
+    ), porciones AS (
+      SELECT l.*, ROUND(pe.subtotal_usd * peso, 2) AS subtotal,
+             ROUND(pe.flete_usd * peso, 2) AS flete, ROUND(pe.comision_usd * peso, 2) AS comision,
+             ROW_NUMBER() OVER (PARTITION BY l.pedido ORDER BY peso DESC, id_producto) AS posicion
+      FROM pesos l JOIN public.pedidos pe ON pe.id = l.pedido
+    ), importes AS (
+      SELECT l.*,
+             subtotal + CASE WHEN posicion = 1 THEN pe.subtotal_usd - SUM(subtotal) OVER pedido ELSE 0 END AS subtotal_final,
+             flete + CASE WHEN posicion = 1 THEN pe.flete_usd - SUM(flete) OVER pedido ELSE 0 END AS flete_final,
+             comision + CASE WHEN posicion = 1 THEN pe.comision_usd - SUM(comision) OVER pedido ELSE 0 END AS comision_final
+      FROM porciones l JOIN public.pedidos pe ON pe.id = l.pedido
+      WINDOW pedido AS (PARTITION BY l.pedido)
+    )
     INSERT INTO dw.fact_ventas
         (id_tiempo, id_cliente_dw, id_producto_dw, id_estado, id_dispositivo,
          id_pedido_origen, cantidad, precio_unitario_usd, subtotal_usd, flete_usd,
@@ -119,18 +136,13 @@ BEGIN
         TO_CHAR(pe.fecha_creacion, 'YYYYMMDD')::INT,
         dc.id_cliente_dw, dp.id_producto_dw, de.id_estado,
         (SELECT id_dispositivo FROM dw.dim_dispositivo WHERE tipo = 'DESCONOCIDO'),
-        pe.id, dt.cantidad, dt.precio_unitario_usd,
-        l.subtotal,
-        ROUND(pe.flete_usd    * l.subtotal / NULLIF(pe.subtotal_usd, 0), 2),
-        ROUND(pe.comision_usd * l.subtotal / NULLIF(pe.subtotal_usd, 0), 2),
-        l.subtotal
-          + ROUND(pe.flete_usd    * l.subtotal / NULLIF(pe.subtotal_usd, 0), 2)
-          + ROUND(pe.comision_usd * l.subtotal / NULLIF(pe.subtotal_usd, 0), 2)
+        pe.id, l.cantidad, ROUND(l.subtotal_final / l.cantidad, 2),
+        l.subtotal_final, l.flete_final, l.comision_final,
+        l.subtotal_final + l.flete_final + l.comision_final
     FROM public.pedidos pe
-    JOIN public.pedido_detalle dt  ON dt.id_pedido = pe.id
-    CROSS JOIN LATERAL (SELECT dt.cantidad * dt.precio_unitario_usd AS subtotal) l
+    JOIN importes l ON l.pedido = pe.id
     JOIN dw.dim_cliente dc         ON dc.id_usuario = pe.id_usuario
-    JOIN dw.dim_producto dp        ON dp.id_producto = dt.id_producto
+    JOIN dw.dim_producto dp        ON dp.id_producto = l.id_producto
     JOIN dw.dim_estado_pedido de   ON de.nombre_estado = CASE pe.estado
                                         WHEN 'creado'     THEN 'CREADO'
                                         WHEN 'pagado'     THEN 'PAGADO'
@@ -139,10 +151,10 @@ BEGIN
                                         WHEN 'entregado'  THEN 'ENTREGADO'
                                         WHEN 'cancelado'  THEN 'CANCELADO'
                                       END
-    WHERE pe.fecha_creacion > v_desde
-      AND pe.estado <> 'creado'
     ON CONFLICT (id_pedido_origen, id_producto_dw) DO UPDATE SET
-        id_estado = EXCLUDED.id_estado, total_usd = EXCLUDED.total_usd;
+        id_estado = EXCLUDED.id_estado, cantidad = EXCLUDED.cantidad,
+        precio_unitario_usd = EXCLUDED.precio_unitario_usd, subtotal_usd = EXCLUDED.subtotal_usd,
+        flete_usd = EXCLUDED.flete_usd, comision_usd = EXCLUDED.comision_usd, total_usd = EXCLUDED.total_usd;
  
     GET DIAGNOSTICS v_filas = ROW_COUNT;
     INSERT INTO dw.etl_log (proceso, fecha_fin, filas_procesadas, estado)

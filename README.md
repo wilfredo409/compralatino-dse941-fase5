@@ -1,109 +1,33 @@
-# CompraLatino — Código fuente Fase 3 (DSE941)
+# CompraLatino
 
-Primera versión funcional del software: backend Node.js + Express sobre
-PostgreSQL 16, siguiendo exactamente el contrato `openapi.yaml` y el esquema
-`schema.sql` de Fase 2, más un frontend mínimo en Vue.js 3 que lo consume.
+Plataforma de intermediación de compras desarrollada por el equipo de DSE941 en la Universidad Don Bosco. La Fase 5 continúa el código del equipo desde el commit `95226dc` del [repositorio original](https://github.com/ciberdavisxp/compralatino-dse941/tree/95226dc).
 
-Ya se probó de punta a punta en un entorno limpio (PostgreSQL 16 real, no
-simulado): registro/login, catálogo con filtros, compra directa con pago,
-oferta de subasta con Circuit Breaker, motor de recomendaciones (sus 3
-niveles de fallback) y el panel administrativo completo — ver
-`supuestos_fase3.md` en la carpeta padre para el detalle de qué se asumió y
-qué falta confirmar con el docente.
+El sistema tiene cinco módulos: cuentas, catálogo, compras, recomendaciones y administración. Incluye una SPA Vue 3, una API REST Express en Node.js 22, PostgreSQL 16 y un almacén dimensional con scripts ETL. La interfaz de YAuctions y la pasarela de pago se simulan. Usa datos y credenciales de demostración exclusivamente en un ambiente de pruebas.
 
-## 1. Requisitos
+## Inicio rápido
 
-- Node.js 22 LTS (versión homologada por el equipo; también fijada en `.nvmrc`, en los `engines` de cada `package.json`, en los Dockerfile y en el flujo de CI).
-- PostgreSQL 16 corriendo localmente (o accesible por `DATABASE_URL`).
+Requiere Docker con Compose v2. Copia `.env.example` a `.env` en la raíz y asigna tres secretos distintos. Usa una contraseña hexadecimal para PostgreSQL porque se incluye en una URI.
 
-## 2. Base de datos
-
-```bash
-createdb compralatino   # o usa el gestor gráfico que prefieran
-psql -d compralatino -f "../fase 2/schema.sql"     # schema.sql de Fase 2, sin tocar (ejecutar desde tareas/fase 3/)
-psql -d compralatino -f codigo/backend/db/migrations/001_pedido_codigo_seq.sql
-psql -d compralatino -f codigo/backend/db/migrations/002_fix_usuarios_estado_length.sql
-psql -d compralatino -f codigo/backend/db/migrations/003_check_stock_no_negativo.sql
+```sh
+docker compose up -d --build --wait
+docker compose ps
+docker compose exec backend npm run seed       # Solo en una base académica vacía
 ```
 
-Las tres migraciones son aditivas (no alteran nada de lo ya entregado en
-Fase 2 salvo un defecto real que encontramos al probar, ver
-`supuestos_fase3.md` #10, y una restricción `CHECK (stock >= 0)` que protege
-el inventario). Con Docker Compose se aplican solas, pero **solo al crear el
-volumen de la base de datos**: si ya tenías uno de antes, ejecuta la 003 a mano
-o recréalo con `docker compose down -v`.
+- Aplicación en `http://127.0.0.1:8080`.
+- Swagger en `http://127.0.0.1:8080/api/docs/`.
+- Disponibilidad en `http://127.0.0.1:8080/api/v1/salud/listo`.
+- Cuentas locales en `backend/db/seed.js`. El panel y el reporte CSV requieren rol de administrador.
 
-## 3. Backend
+Para desarrollo sin Docker, crea una base PostgreSQL vacía, aplica en orden `deploy/db-init/*.sql` con `psql -v ON_ERROR_STOP=1 -f archivo.sql` y configura `backend/.env` a partir de su ejemplo. En `backend`, ejecuta `npm ci`, `npm run seed` y `npm start`. En `frontend`, ejecuta `npm ci --legacy-peer-deps` y `npm run dev` para abrir `http://127.0.0.1:5173`.
 
-```bash
-cd backend
-cp .env.example .env        # ajustar DATABASE_URL si es necesario
-npm install
-npm run seed                 # datos de demostración (catálogo, usuarios, historial)
-npm start                    # API: http://localhost:3000/api/v1
-```
+## Operación y verificación
 
-Con Docker Compose, nginx publica la aplicación en el puerto 80 y reenvía las
-rutas `/api/` al backend. Por eso, la documentación interactiva está en
-`http://localhost/api/docs/`. Si ejecutas el backend directamente con `npm start`
-(sin nginx), está en `http://localhost:3000/api/docs/`. Swagger UI carga el
-contrato `openapi.yaml` de la raíz del proyecto.
+- [Despliegue, copias, actualizaciones y reversión](GUIA_DESPLIEGUE_AWS.md)
+- [Operación del ETL y Power BI](docs/bi/operacion.md)
+- [Manual de usuario](docs/fase5/manual-usuario.md)
+- [Pruebas reproducibles](pruebas/README.md)
+- [Plan de pruebas y resultados heredados](docs/qa/evidencias/plan_pruebas_qa.md)
+- [Contrato OpenAPI](openapi.yaml)
 
-Usuarios de prueba que crea el seed (contraseñas en `db/seed.js`):
-
-| Correo | Contraseña | Rol |
-|---|---|---|
-| admin@compralatino.com | Admin1234! | administrador |
-| laura.pineda@demo.compralatino.com | Demo1234! | cliente (con compras) |
-| fernando.lopez@demo.compralatino.com | Demo1234! | cliente (con compras) |
-| lucia.hernandez@demo.compralatino.com | Demo1234! | cliente (solo navegación) |
-| david.cardona@demo.compralatino.com | Demo1234! | cliente (sin historial) |
-| edwin.ceron@demo.compralatino.com | Demo1234! | cliente (con compras) |
-
-### Demostrar el Circuit Breaker de YAuctionsAdapter
-
-Dos formas:
-1. Subir `YAUCTIONS_FAILURE_RATE` en `.env` (p. ej. `0.9`) y reiniciar — las
-   ofertas fallarán la mayoría de las veces hasta que el circuito se abra.
-2. Sin tocar el `.env`: enviar `"simularFallo": true` en el cuerpo de
-   `POST /pedidos/{id}/ofertas` — fuerza el fallo en esa llamada puntual sin
-   afectar el resto de la demo. `GET /admin/metricas` (rol administrador)
-   muestra el estado del circuito en vivo (`CERRADO` / `ABIERTO` /
-   `SEMI_ABIERTO`), igual que el bloque "Salud de la integración con
-   YAuctions" del wireframe W06.
-
-## 4. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev    # http://localhost:5173 (proxy configurado hacia :3000)
-```
-
-## 5. Cómo está organizado (mapeo a los módulos de openapi.yaml)
-
-```
-backend/src/
-  routes/auth.routes.js         M1 · Cuentas (registro, login, refresh)
-  routes/usuarios.routes.js     M1 · Cuentas (perfil y direcciones)
-  routes/productos.routes.js    M2 · Catálogo
-  routes/categorias.routes.js   M2 · Catálogo
-  routes/pedidos.routes.js      M3 · Compras (pedidos, pago, ofertas)
-  routes/webhooks.routes.js     M3 · Compras (confirmación de pago)
-  routes/recomendaciones.routes.js  M4 · Recomendaciones
-  routes/admin.routes.js        M5 · Administración
-  adapters/YAuctionsAdapter.js  Integración externa simulada (Adapter + Circuit Breaker)
-  services/                     Reglas de negocio (recomendaciones, tipo de cambio)
-```
-
-No se usó ningún ORM a propósito: todas las consultas son SQL parametrizado
-explícito en cada archivo de rutas/servicios, para que el mapeo con
-`schema.sql` sea trazable línea por línea durante la defensa.
-
-## 6. Qué queda fuera de esta primera versión (a propósito)
-
-Ver `supuestos_fase3.md` en la carpeta padre — resume cada decisión que se
-asumió para poder avanzar sin bloquear el trabajo en un criterio de negocio
-que el equipo todavía no ha discutido, y qué haría falta para llevarlo a
-producción real (pasarela de pago real, verificación de correo, resolución
-real de subastas, etc.).
+El servidor web es el único servicio publicado, ligado a la interfaz local. Para un servidor externo, configura el proxy HTTPS del host y confirma las condiciones de liberación de la guía. Las migraciones de inicialización solo se aplican al crear el volumen. Conserva el volumen y toma un respaldo antes de actualizar un entorno con datos.

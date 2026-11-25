@@ -6,6 +6,8 @@ import 'dotenv/config';
 // mapeo con schema.sql (Fase 2) sea trazable durante la defensa.
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 3000,
+  statement_timeout: 5000,
 });
 
 pool.on('error', (err) => {

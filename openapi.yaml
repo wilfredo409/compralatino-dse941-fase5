@@ -26,6 +26,45 @@ tags:
   - name: M5 · Administración
 
 paths:
+  /salud/listo:
+    get:
+      summary: Verificar la disponibilidad del esquema transaccional
+      security: []
+      responses:
+        '200':
+          description: Esquema operativo
+        '503':
+          description: Base de datos o esquema no disponibles
+
+  /admin/cuadro-mando:
+    get:
+      tags: [M5 · Administración]
+      summary: Comparar indicadores ejecutivos de dos periodos consecutivos
+      parameters:
+        - in: query
+          name: dias
+          schema:
+            type: integer
+            enum: [7, 30, 90]
+            default: 30
+      responses:
+        '200':
+          description: Periodos actual y anterior con indicadores de ventas, compradores y entregas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dias, actual, anterior]
+                properties:
+                  dias: { type: integer }
+                  actual: { $ref: '#/components/schemas/IndicadoresEjecutivos' }
+                  anterior: { $ref: '#/components/schemas/IndicadoresEjecutivos' }
+        '400':
+          description: Duración del periodo no admitida
+        '401':
+          description: Autenticación requerida
+        '403':
+          description: Rol de administrador requerido
   /auth/registro:
     post:
       tags: [M1 · Cuentas]
@@ -457,6 +496,14 @@ components:
       schema: { type: string, format: uuid }
 
   schemas:
+    IndicadoresEjecutivos:
+      type: object
+      properties:
+        ventasUsd: { type: number }
+        pedidos: { type: integer }
+        compradores: { type: integer }
+        compradoresRecurrentesPorcentaje: { type: number, nullable: true }
+        pedidosEntregadosPorcentaje: { type: number, nullable: true }
     Usuario:
       type: object
       properties:

@@ -134,7 +134,13 @@ CREATE TABLE dw.etl_log (
 );
  
 -- Rol de solo lectura para Power BI (ver apartado 15.9.6)
-CREATE ROLE bi_reader LOGIN PASSWORD :'bi_reader_password';
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bi_reader') THEN
+    CREATE ROLE bi_reader NOLOGIN;
+  END IF;
+END;
+$$;
 GRANT USAGE ON SCHEMA dw TO bi_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA dw TO bi_reader;
 ALTER DEFAULT PRIVILEGES IN SCHEMA dw GRANT SELECT ON TABLES TO bi_reader;

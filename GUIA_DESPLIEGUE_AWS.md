@@ -1,124 +1,39 @@
-# CompraLatino — Guía de despliegue en AWS (EC2 + Docker Compose)
+# Instalación y mantenimiento de CompraLatino
 
-Levanta todo el sistema (PostgreSQL 16 + backend Node/Express + frontend Vue con nginx) en **una sola instancia EC2**.
-No cambia ni una línea del código de Fase 3: solo añade los archivos de Docker.
+## Destino de referencia
 
-```
-Internet ──80──▶ nginx (contenedor web) ──/api/──▶ backend (Node, :3000, interno)
-                                                        │
-                                                        ▼
-                                           PostgreSQL 16 (interno, volumen persistente)
-```
+AWS us-east-1, EC2 Linux t3.small con EBS gp3 de 20 GiB para el piloto. Docker Compose ejecuta nginx y la SPA Vue, el backend Express y PostgreSQL 16. El proxy nginx del host termina HTTPS y reenvía al puerto 8080 de la interfaz local. PostgreSQL y Express se alcanzan solo desde la red Docker. La Fase 4 presupuestó un escenario administrado con RDS, CloudFront y otros servicios. Ese diseño es una opción de evolución que requiere su propia validación.
 
-## 0. Costos estimados (verifica en la consola; son aproximados)
+### Instalación
 
-| Recurso | Costo aprox. |
-|---|---|
-| EC2 `t3.small` (2 GB RAM) | ~US$15/mes encendida |
-| Disco EBS 20 GB | ~US$2/mes |
-| IPv4 pública | ~US$3.6/mes |
-| **Total** | **~US$20/mes** → los $100 alcanzan para ~5 meses, **si la apagas cuando no la uses** |
+1. Prepara el host con Docker Engine, Compose v2, nginx, un dominio y certificado emitido para ese dominio. Define alertas de gasto y acceso de operador con MFA. En el grupo de seguridad abre 443, 80 para redirección y 22 únicamente al origen administrativo. Usa un usuario de operación separado.
+2. Retira cualquier versión anterior del puerto 8080 antes de desplegar una segunda instalación. Copia el repositorio desde GitHub con acceso autorizado y fija la versión por commit o etiqueta. Copia `.env.example` a `.env`, restringe permisos con `chmod 600 .env` y asigna valores hexadecimales aleatorios e independientes con `openssl rand -hex 32`. Conserva los secretos fuera de Git.
+3. Ejecuta `docker compose up -d --build --wait`. Comprueba `docker compose ps`. Para una base existente, registra qué scripts de `deploy/db-init` ya se aplicaron y aplica solamente los pendientes, con respaldo previo y `ON_ERROR_STOP=1`. Para crear datos de demostración ejecuta `docker compose exec backend npm run seed` únicamente en un ambiente aislado.
+4. Configura `COMPRALATINO_HOST` con el dominio real y genera la configuración del host con `envsubst '${COMPRALATINO_HOST}' < deploy/nginx/compralatino.conf.template`. Instálala en la configuración de nginx del host, valida con `nginx -t` y recarga. El certificado debe existir antes de activar este archivo. Mantén `WEB_PORT=8080` o ajusta el destino del proxy.
+5. Prueba la redirección y verifica HTTPS con `curl --fail --tlsv1.3 --tls-max 1.3 https://DOMINIO/api/v1/salud/listo`. Confirma la renovación del certificado. Recorre el flujo con datos sintéticos, revisa Swagger, exporta CSV como administrador y registra UTC, versión, resultado, operador y URL.
+6. Habilita [el ETL](docs/bi/operacion.md) y conserva su salida en la bitácora. Revisa que el respaldo pueda restaurarse en una base separada. Una persona distinta del operador debe revisar la evidencia antes de promover la versión.
 
-`t3.micro` (1 GB) es más barata pero justa para Postgres + Node + compilar el frontend. Si la consola no te deja elegir un tipo, es una restricción del plan gratuito: usa el que te permita.
+### Respaldo y restauración
 
-## 1. Antes de crear nada
+En el servidor Linux crea un directorio de respaldos fuera del repositorio, con permisos para el operador. Programa al menos un respaldo diario y guarda una copia cifrada fuera del host. RPO propuesto: 24 horas. RTO propuesto: 4 horas. Conserva 7 diarios y 4 semanales conforme a la política de datos del entorno.
 
-1. Consola AWS → arriba a la derecha elige la región **us-east-1 (N. Virginia)** (o la que prefieran, pero que sea la misma para todo el equipo).
-2. Activa **MFA** en la cuenta raíz (IAM → Security credentials). No uses la cuenta raíz para el trabajo diario.
-3. *Billing → Budgets → Create budget* (alerta, p. ej., a US$10). Cuenta además como actividad de "Explore AWS".
-
-## 2. Crear la instancia EC2
-
-*EC2 → Launch instance* (cuenta también como actividad de "Explore AWS"):
-
-- **Name:** `compralatino`
-- **AMI:** Ubuntu Server 24.04 LTS
-- **Instance type:** `t3.small`
-- **Key pair:** *Create new key pair* → tipo RSA, formato `.pem` → guárdalo (no se puede volver a descargar).
-- **Network settings → Create security group**, con estas reglas de entrada:
-  - SSH (22): origen **My IP** (solo tu IP)
-  - HTTP (80): origen **Anywhere (0.0.0.0/0)**
-  - **No abras el 5432 (Postgres) ni el 3000.**
-- **Storage:** 20 GiB gp3.
-- *Launch instance*. Cuando esté "Running", copia su **Public IPv4 address**.
-
-> Si la apagas y la vuelves a encender, la IP pública cambia (a menos que le asignes una *Elastic IP*).
-
-## 3. Subir el código
-
-En tu PC (PowerShell), desde la carpeta `tareas\fase 3\`, sin `node_modules`:
-
-```powershell
-tar -czf compralatino.tgz --exclude=node_modules --exclude=dist --exclude=.env codigo
-scp -i C:\ruta\a\tu-clave.pem compralatino.tgz ubuntu@IP_PUBLICA:~
-ssh -i C:\ruta\a\tu-clave.pem ubuntu@IP_PUBLICA
+```sh
+umask 077
+marca=$(date -u +%Y%m%dT%H%M%SZ)
+docker compose exec -T db pg_dump -Fc -U compralatino -d compralatino > "/ruta/respaldos/CL-${marca}.dump"
+test -s "/ruta/respaldos/CL-${marca}.dump"
+docker compose exec -T db createdb -U compralatino compralatino_restore
+docker compose exec -T db pg_restore --exit-on-error -U compralatino -d compralatino_restore < "/ruta/respaldos/CL-${marca}.dump"
 ```
 
-(Alternativa: subir el código a un repositorio propio en GitHub y hacer `git clone` en la instancia.)
+Comprueba restauración, integridad y permisos en una base con nombre nuevo. Restablece roles de lectura con privilegios mínimos si cambias de clúster. Prueba la aplicación después de apuntar una instancia aislada a la copia restaurada. Para recuperar producción, valida la copia antes de promoverla y documenta el intervalo de transacciones afectado.
 
-## 4. Instalar Docker en la instancia
+### Versiones, parches e incidencias
 
-Ya dentro de la instancia (por SSH):
+- **Cada día**. Revisa disponibilidad, fallos del ETL, edad del último respaldo y capacidad de disco.
+- **Cada semana**. Revisa dependencias, certificados y errores recurrentes. Verifica una restauración fuera de producción y da seguimiento a los incidentes en Trello.
+- **Cada mes**. Agrupa parches compatibles, aplica al ambiente de prueba y revisa consumo, accesos, indicadores y compromisos. Prueba de nuevo después de promover.
+- **Incidente crítico**. Registra versión, hora y síntomas. Un fallo de disponibilidad o integridad detiene la promoción. Si el último cambio es la causa, vuelve a construir desde la versión aprobada anterior con `docker compose up -d --build --wait`. Conserva el volumen. Si los datos sufrieron un cambio incompatible, restaura la copia verificada en una base separada y aplica el procedimiento de recuperación.
+- **Parche de emergencia**. Revisa el cambio con otro integrante, ejecuta las pruebas pertinentes, registra el respaldo y repite la prueba de humo. Usa etiquetas Git para identificar liberaciones y evita ramas o artefactos sin revisión.
 
-```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-v2
-sudo systemctl enable --now docker
-sudo usermod -aG docker ubuntu && newgrp docker
-```
-
-## 5. Configurar y levantar
-
-```bash
-tar -xzf compralatino.tgz && cd codigo
-cp .env.example .env
-nano .env        # cambia DB_PASSWORD, JWT_SECRET y WEBHOOK_SECRET (genera con: openssl rand -hex 24)
-docker compose up -d --build
-docker compose ps                      # los 3 servicios deben estar "running"/"healthy"
-docker compose exec backend npm run seed   # carga el catálogo y los usuarios de demostración (una sola vez)
-```
-
-La primera vez, Postgres ejecuta solo el `schema.sql` de Fase 2 y las 2 migraciones de Fase 3
-(carpeta `deploy/db-init/`). Esos scripts **solo corren con el volumen vacío**.
-
-## 6. Probar
-
-Abre `http://IP_PUBLICA` en el navegador. La documentación interactiva de la
-API también está disponible en `http://IP_PUBLICA/api/docs/`. Cuentas de
-demostración (las mismas del README del código):
-
-- Administrador: `admin@compralatino.com` / `Admin1234!`
-- Cliente con compras: `laura.pineda@demo.compralatino.com` / `Demo1234!`
-
-> Son contraseñas de demostración conocidas. Antes de dejar esto encendido mucho tiempo, cámbialas o apaga la instancia fuera de la defensa.
-> Esta versión sirve por **HTTP** (sin dominio ni certificado), suficiente para la demo académica. Para HTTPS haría falta un dominio + Let's Encrypt.
-
-## 7. Operación diaria
-
-```bash
-docker compose logs -f backend          # ver la bitácora del backend
-docker compose restart backend          # reiniciar (p. ej. tras cambiar YAUCTIONS_FAILURE_RATE en .env)
-docker compose down                     # detener (los datos se conservan en el volumen pgdata)
-docker compose down -v                  # detener Y BORRAR la base de datos (para empezar de cero)
-```
-
-Demo del Circuit Breaker: en `.env` pon `YAUCTIONS_FAILURE_RATE=0.9` y `docker compose up -d` para recrear el backend.
-El estado del circuito se ve en el panel de administración.
-
-## 8. Cuidar los créditos
-
-- Cuando no estés usando el sistema: *EC2 → Instance state → **Stop*** (no *Terminate*). Mientras esté detenida no paga cómputo, solo disco e IP.
-- Al terminar el curso: *Terminate* la instancia y borra el volumen y la Elastic IP si creaste una.
-- Revisa el saldo en *Billing and Cost Management → Credits*.
-- El plan gratuito dura 6 meses desde que abriste la cuenta o hasta agotar los créditos; después AWS suspende la cuenta y conserva los datos 90 días.
-
-## 9. Si algo falla
-
-| Síntoma | Qué revisar |
-|---|---|
-| No abre `http://IP` | ¿Security group con el puerto 80 abierto a 0.0.0.0/0? ¿IP pública actual (cambia al reiniciar)? |
-| `docker compose` no existe | Falta el paquete `docker-compose-v2` (paso 4). |
-| `permission denied` con docker | Cierra y vuelve a abrir la sesión SSH (grupo `docker`), o usa `sudo`. |
-| El backend no arranca | `docker compose logs backend`; casi siempre es un `.env` incompleto. |
-| Se compila muy lento o falla por memoria | Usa `t3.small` en lugar de `t3.micro`. |
-| Cambié el schema y no se aplica | Los scripts de `db-init` solo corren con el volumen vacío: `docker compose down -v` y vuelve a levantar (borra los datos). |
+Esta distribución sirve para la validación académica o un piloto sin operaciones comerciales reales. Liberar a usuarios finales requiere autorización del propietario, dominio y certificado, credenciales y contrato de YAuctions, pasarela aprobada, controles sobre datos personales y aceptación funcional y operativa. El tramo interno del proxy a los contenedores usa HTTP sobre el host y la red privada. Para exigir TLS en cada tramo hay que configurar y verificar también ese cifrado interno.
