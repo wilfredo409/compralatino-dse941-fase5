@@ -23,14 +23,10 @@ import { requiereAuth } from '../middleware/auth.js';
 import { ErrorValidacion, ErrorNoEncontrado, ErrorConflicto, ErrorDependenciaExterna } from '../utils/errors.js';
 import { limiteDesdeQuery, decodificarCursor, codificarCursor } from '../utils/pagination.js';
 import { yAuctionsAdapter } from '../adapters/YAuctionsAdapter.js';
+import { calcularPrecioPedido } from '../services/precioPedido.service.js';
 
 export const pedidosRouter = Router();
 pedidosRouter.use(requiereAuth);
-
-// Supuestos documentados en supuestos_fase3.md #9 (comisión/flete de la
-// primera versión funcional, hasta que el equipo defina una tabla de tarifas):
-const FLETE_FIJO_USD = 12.0;
-const COMISION_PORCENTAJE = 0.05; // 5% de intermediación sobre el subtotal
 
 async function serializarPedido(pedidoRow) {
   const { rows: detalle } = await listarDetallePedido(pedidoRow.id);
@@ -108,9 +104,7 @@ pedidosRouter.post(
         }
       }
 
-      const flete = FLETE_FIJO_USD;
-      const comision = Math.round(subtotal * COMISION_PORCENTAJE * 100) / 100;
-      const total = Math.round((subtotal + flete + comision) * 100) / 100;
+      const { fleteUsd: flete, comisionUsd: comision, totalUsd: total } = calcularPrecioPedido(subtotal);
 
       const { rows: seqRows } = await siguienteNumeroPedido(client);
       const codigo = `CL-${new Date().getFullYear()}-${String(seqRows[0].n).padStart(4, '0')}`;

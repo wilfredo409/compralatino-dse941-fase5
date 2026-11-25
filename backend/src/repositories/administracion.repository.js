@@ -70,7 +70,8 @@ export function listarPagosParaReporte(desde, hasta) {
   return query(
     `SELECT pg.id, p.codigo AS pedido_codigo, pg.proveedor, pg.monto, pg.estado, pg.fecha
      FROM pagos pg JOIN pedidos p ON p.id = pg.id_pedido
-     WHERE ($1::timestamptz IS NULL OR pg.fecha >= $1) AND ($2::timestamptz IS NULL OR pg.fecha <= $2)
+    WHERE ($1::date IS NULL OR pg.fecha >= $1::date)
+      AND ($2::date IS NULL OR pg.fecha < $2::date + interval '1 day')
      ORDER BY pg.fecha DESC`,
     [desde || null, hasta || null]
   );

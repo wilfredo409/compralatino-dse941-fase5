@@ -27,7 +27,12 @@ Para desarrollo sin Docker, crea una base PostgreSQL vacía, aplica en orden `de
 - [Operación del ETL y Power BI](docs/bi/operacion.md)
 - [Manual de usuario](docs/fase5/manual-usuario.md)
 - [Pruebas reproducibles](pruebas/README.md)
+- [Procedencia de las imágenes del catálogo](docs/fase5/creditos-imagenes.md)
 - [Plan de pruebas y resultados heredados](docs/qa/evidencias/plan_pruebas_qa.md)
 - [Contrato OpenAPI](openapi.yaml)
 
 El servidor web es el único servicio publicado, ligado a la interfaz local. Para un servidor externo, configura el proxy HTTPS del host y confirma las condiciones de liberación de la guía. Las migraciones de inicialización solo se aplican al crear el volumen. Conserva el volumen y toma un respaldo antes de actualizar un entorno con datos.
+
+### Actualizar el catálogo de una demostración existente
+
+Después de construir las imágenes de Docker del nuevo diseño, ejecuta `docker compose exec backend npm run catalogo:demo` en el entorno de demostración. El comando actualiza las fichas identificadas del catálogo anterior, agrega el surtido nuevo y conserva los identificadores y el inventario existente. Para una base de demostración vacía basta con `npm run seed`.

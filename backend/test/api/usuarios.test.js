@@ -72,3 +72,16 @@ test('perfil: una dirección incompleta cancela TODO el cambio (transacción at�
   assert.equal(despues.body.nombre, antes.body.nombre, 'el nombre no cambió');
   assert.deepEqual(despues.body.direcciones, antes.body.direcciones, 'las direcciones anteriores siguen intactas');
 });
+
+test('perfil: editar una dirección guardada conserva su identificador', { skip: SIN_BD }, async () => {
+  const creado = await request(app).put('/api/v1/usuarios/me').set(auth()).send({
+    nombre: 'Nombre', apellido: 'Prueba', direcciones: [direccion({ esPrincipal: true })],
+  });
+  const guardada = creado.body.direcciones[0];
+  const actualizado = await request(app).put('/api/v1/usuarios/me').set(auth()).send({
+    nombre: 'Nombre', apellido: 'Prueba', direcciones: [{ ...guardada, detalle: 'Detalle actualizado' }],
+  });
+  assert.equal(actualizado.status, 200);
+  assert.equal(actualizado.body.direcciones[0].id, guardada.id);
+  assert.equal(actualizado.body.direcciones[0].detalle, 'Detalle actualizado');
+});

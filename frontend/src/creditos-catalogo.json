@@ -1,0 +1,182 @@
+[
+  {
+    "producto": "Cámara Canon AE-1 35 mm",
+    "imagen": "/catalogo/canon-ae1.webp",
+    "titulo": "Canon AE-1 2.jpg",
+    "autor": "RRT877",
+    "licencia": "CC0",
+    "licenciaUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Canon_AE-1_2.jpg"
+  },
+  {
+    "producto": "Cámara Fujifilm Instax Mini 12",
+    "imagen": "/catalogo/instax-mini12.webp",
+    "titulo": "Fujifilm Instax Mini 12 - Instant Film Camera (52950271338).jpg",
+    "autor": "Tony Webster",
+    "licencia": "CC BY 2.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by/2.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Fujifilm_Instax_Mini_12_-_Instant_Film_Camera_(52950271338).jpg"
+  },
+  {
+    "producto": "Lente Nikkor 50 mm f/1.4",
+    "imagen": "/catalogo/nikkor-50.webp",
+    "titulo": "Nikon AF Nikkor 50mm 1.4.jpg",
+    "autor": "Dudhhr",
+    "licencia": "CC BY-SA 4.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Nikon_AF_Nikkor_50mm_1.4.jpg"
+  },
+  {
+    "producto": "Flash Speedlite 430EX",
+    "imagen": "/catalogo/speedlite-430.webp",
+    "titulo": "Canon Speedlite 430EX First Generation Flash Unit.JPG",
+    "autor": "Avsar Aras",
+    "licencia": "CC BY-SA 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Canon_Speedlite_430EX_First_Generation_Flash_Unit.JPG"
+  },
+  {
+    "producto": "Lente Canon 24-70 mm f/2.8",
+    "imagen": "/catalogo/canon-2470.webp",
+    "titulo": "Canon 24-70mm f2.8 lens.jpg",
+    "autor": "Daniel Dionne",
+    "licencia": "CC BY-SA 2.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Canon_24-70mm_f2.8_lens.jpg"
+  },
+  {
+    "producto": "Consola Famicom original (1985)",
+    "imagen": "/catalogo/famicom.webp",
+    "titulo": "Nintendo-Famicom-Console-FL.jpg",
+    "autor": "Evan-Amos",
+    "licencia": "Public domain",
+    "licenciaUrl": "https://commons.wikimedia.org/wiki/File:Nintendo-Famicom-Console-FL.jpg",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Nintendo-Famicom-Console-FL.jpg"
+  },
+  {
+    "producto": "Reloj Seiko 5 automático",
+    "imagen": "/catalogo/seiko5.webp",
+    "titulo": "Seiko 5.jpg",
+    "autor": "Isik",
+    "licencia": "CC BY-SA 4.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Seiko_5.jpg"
+  },
+  {
+    "producto": "Citizen Eco-Drive vintage",
+    "imagen": "/catalogo/citizen-ecodrive.webp",
+    "titulo": "Citizen Attesa Eco-Drive ATV53-3023 01 (cropped).JPG",
+    "autor": "Kansai explorer",
+    "licencia": "CC BY-SA 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Citizen_Attesa_Eco-Drive_ATV53-3023_01_(cropped).JPG"
+  },
+  {
+    "producto": "Bajo eléctrico usado Fender Jazz",
+    "imagen": "/catalogo/fender-jazz.webp",
+    "titulo": "70's Fender Jazz Bass.jpg",
+    "autor": "Octagon",
+    "licencia": "Public domain",
+    "licenciaUrl": "https://commons.wikimedia.org/wiki/File:70%27s_Fender_Jazz_Bass.jpg",
+    "pagina": "https://commons.wikimedia.org/wiki/File:70%27s_Fender_Jazz_Bass.jpg"
+  },
+  {
+    "producto": "Ukulele soprano de caoba",
+    "imagen": "/catalogo/ukulele-caoba.webp",
+    "titulo": "Soprano Ukulele.JPG",
+    "autor": "Lardyfatboy",
+    "licencia": "CC BY-SA 4.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Soprano_Ukulele.JPG"
+  },
+  {
+    "producto": "Pluma estilográfica Pilot Metropolitan",
+    "imagen": "/catalogo/pluma-pilot.webp",
+    "titulo": "Pilot Metropolitan (26430911443).jpg",
+    "autor": "M Dreibelbis from Cleveland Ohio",
+    "licencia": "CC BY 2.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by/2.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Pilot_Metropolitan_(26430911443).jpg"
+  },
+  {
+    "producto": "Taza japonesa Mino para té",
+    "imagen": "/catalogo/taza-mino.webp",
+    "titulo": "Yunomi ash.jpg",
+    "autor": "Phil Rogers",
+    "licencia": "CC BY-SA 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Yunomi_ash.jpg"
+  },
+  {
+    "producto": "Pañuelo japonés furoshiki",
+    "imagen": "/catalogo/furoshiki-indigo.webp",
+    "titulo": "Japan, 19th century - Wrapper (Furoshiki) - 1920.1948 - Cleveland Museum of Art.jpg",
+    "autor": "Cleveland Museum of Art",
+    "licencia": "CC0",
+    "licenciaUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Japan,_19th_century_-_Wrapper_(Furoshiki)_-_1920.1948_-_Cleveland_Museum_of_Art.jpg"
+  },
+  {
+    "producto": "Toalla japonesa tenugui",
+    "imagen": "/catalogo/tenugui-olas.webp",
+    "titulo": "Tenugui.jpg",
+    "autor": "Rikaris",
+    "licencia": "CC BY-SA 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Tenugui.jpg"
+  },
+  {
+    "producto": "Teclado mecánico HHKB",
+    "imagen": "/catalogo/hhkb.webp",
+    "titulo": "Happy Hacking Keyboard Professional 2.jpg",
+    "autor": "Aon fi",
+    "licencia": "CC BY 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Happy_Hacking_Keyboard_Professional_2.jpg"
+  },
+  {
+    "producto": "Muñeca tradicional kokeshi de madera",
+    "imagen": "/catalogo/kokeshi.webp",
+    "titulo": "Japanese wooden Kokeshi-Ningyoo 3.jpg",
+    "autor": "Tris_T7",
+    "licencia": "CC BY-SA 4.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Japanese_wooden_Kokeshi-Ningyoo_3.jpg"
+  },
+  {
+    "producto": "Figura de cerámica Maneki-neko",
+    "imagen": "/catalogo/maneki-neko.webp",
+    "titulo": "Maneki-Neko Lucky-Cat.jpg",
+    "autor": "Gizlog",
+    "licencia": "CC BY-SA 3.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Maneki-Neko_Lucky-Cat.jpg"
+  },
+  {
+    "producto": "Nintendo Game Boy Pocket japonés",
+    "imagen": "/catalogo/gameboy-pocket.webp",
+    "titulo": "Game-Boy-Pocket-Black.jpg",
+    "autor": "Evan-Amos",
+    "licencia": "Public domain",
+    "licenciaUrl": "https://commons.wikimedia.org/wiki/File:Game-Boy-Pocket-Black.jpg",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Game-Boy-Pocket-Black.jpg"
+  },
+  {
+    "producto": "Lote de cartas Pokémon TCG (japonés)",
+    "imagen": "/catalogo/cartas-pokemon.webp",
+    "titulo": "Pokemon cards and sets.jpg",
+    "autor": "Fernando Martello",
+    "licencia": "CC BY-SA 4.0",
+    "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Pokemon_cards_and_sets.jpg"
+  },
+  {
+    "producto": "Auto a escala Tomica",
+    "imagen": "/catalogo/tomica-auto.webp",
+    "titulo": "Tomica premium headlight gimmick 001.jpg",
+    "autor": "さやなはら",
+    "licencia": "CC0",
+    "licenciaUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Tomica_premium_headlight_gimmick_001.jpg"
+  }
+]

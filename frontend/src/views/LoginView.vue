@@ -15,27 +15,26 @@ async function enviar() {
   cargando.value = true;
   try {
     await iniciarSesion(email.value, password.value);
-    router.push(route.query.redirigirA || '/');
-  } catch (e) {
-    error.value = e.message;
-  } finally {
-    cargando.value = false;
-  }
+    const destino = route.query.redirigirA;
+    router.push(typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//') ? destino : '/');
+  } catch (e) { error.value = e.message; }
+  finally { cargando.value = false; }
 }
 </script>
 
 <template>
-  <h2>Ingresar</h2>
-  <p class="alerta" style="background:#eef2ff;color:#333">
-    Cuentas demo: <code>admin@compralatino.com</code> / <code>Admin1234!</code>
-    (administración) o <code>laura.pineda@demo.compralatino.com</code> / <code>Demo1234!</code> (cliente).
-  </p>
-  <div v-if="error" class="alerta error" role="alert">{{ error }}</div>
-  <form class="form" @submit.prevent="enviar">
-    <label for="login-correo">Correo</label>
-    <input id="login-correo" v-model="email" type="email" required autocomplete="username" />
-    <label for="login-contrasena">Contraseña</label>
-    <input id="login-contrasena" v-model="password" type="password" required autocomplete="current-password" />
-    <button class="btn" type="submit" :disabled="cargando">{{ cargando ? 'Ingresando…' : 'Ingresar' }}</button>
-  </form>
+  <div class="autenticacion">
+    <section class="auth-lateral" aria-hidden="true"><img src="/catalogo/portada-japon.webp" alt="" /></section>
+    <section class="auth-form">
+      <h1>Ingresar</h1>
+      <p class="texto-secundario">Accede a tus pedidos, ofertas y direcciones.</p>
+      <div v-if="error" class="alerta error" role="alert">{{ error }}</div>
+      <form class="form" @submit.prevent="enviar">
+        <label for="login-correo">Correo electrónico</label><input id="login-correo" v-model.trim="email" type="email" required autocomplete="username" />
+        <label for="login-contrasena">Contraseña</label><input id="login-contrasena" v-model="password" type="password" required autocomplete="current-password" />
+        <button class="btn" type="submit" :disabled="cargando">{{ cargando ? 'Ingresando…' : 'Ingresar' }}</button>
+      </form>
+      <p>¿Primera vez en CompraLatino? <RouterLink :to="{ path: '/registro', query: route.query }">Crear cuenta</RouterLink></p>
+    </section>
+  </div>
 </template>

@@ -17,6 +17,8 @@ before(async () => {
   idHija = (await pool.query('INSERT INTO categorias (nombre, id_padre) VALUES ($1, $2) RETURNING id', [`Hija ${sufijo}`, idPadre])).rows[0].id;
   // Una imagen para la ficha del primer producto.
   await pool.query('INSERT INTO producto_imagenes (id_producto, url_blob, orden) VALUES ($1, $2, 1)', [fijos.productos[0].id, 'https://ejemplo.test/img1.png']);
+  await pool.query('UPDATE productos SET descripcion = $1 WHERE id = $2',
+    ['Resumen de tarjeta.\n\nDetalle del artículo.', fijos.productos[0].id]);
 });
 
 after(async () => {
@@ -36,6 +38,9 @@ test('catálogo: filtra por categoría y trae los productos con los campos del c
   for (const campo of ['id', 'titulo', 'precioJpy', 'precioUsd', 'tipoVenta', 'stock', 'imagenes']) assert.ok(campo in p, campo);
   assert.equal(p.precioUsd, 40);
   assert.equal(p.tipoVenta, 'fijo');
+  const conFoto = res.body.items.find(({ id }) => id === fijos.productos[0].id);
+  assert.deepEqual(conFoto.imagenes, ['https://ejemplo.test/img1.png']);
+  assert.equal(conFoto.resumen, 'Resumen de tarjeta.');
 });
 
 test('catálogo: filtra por tipo de venta, por rango de precio y por texto', { skip: SIN_BD }, async () => {
@@ -97,6 +102,7 @@ test('ficha de producto: devuelve el detalle con sus imágenes', { skip: SIN_BD 
   assert.equal(res.status, 200);
   assert.equal(res.body.id, fijos.productos[0].id);
   assert.deepEqual(res.body.imagenes, ['https://ejemplo.test/img1.png']);
+  assert.deepEqual(res.body.estimacionCompra, { subtotalUsd: 40, fleteUsd: 12, comisionUsd: 2, totalUsd: 54 });
 });
 
 test('ficha de producto: 404 si no existe y 400 (no 500) si el identificador no es válido', { skip: SIN_BD }, async () => {

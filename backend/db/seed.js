@@ -10,55 +10,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { pool, withTransaction } from '../src/config/db.js';
-
-const CATEGORIAS = [
-  { nombre: 'Cámaras', hijos: ['Lentes y accesorios'] },
-  { nombre: 'Electrónica' },
-  { nombre: 'Relojería' },
-  { nombre: 'Coleccionables' },
-  { nombre: 'Instrumentos' },
-];
-
-// tipoVenta: 'fijo' | 'subasta'
-const PRODUCTOS_POR_CATEGORIA = {
-  'Cámaras': [
-    { titulo: 'Cámara Canon AE-1 35 mm', jpy: 27800, tipoVenta: 'fijo', stock: 3 },
-    { titulo: 'Cámara Fujifilm Instax Mini 12', jpy: 12500, tipoVenta: 'fijo', stock: 8 },
-    { titulo: 'Cámara Nikon FM2 cuerpo', jpy: 34900, tipoVenta: 'subasta', stock: 1 },
-  ],
-  'Lentes y accesorios': [
-    { titulo: 'Lente Nikkor 50 mm f/1.4', jpy: 13490, tipoVenta: 'fijo', stock: 5 },
-    { titulo: 'Flash Speedlite 430EX', jpy: 6890, tipoVenta: 'fijo', stock: 6 },
-    { titulo: 'Lente Canon 24-70 mm f/2.8', jpy: 89000, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Bolso fotográfico de cuero', jpy: 4880, tipoVenta: 'fijo', stock: 10 },
-  ],
-  'Electrónica': [
-    { titulo: 'iPhone 12 reacondicionado 128GB', jpy: 62000, tipoVenta: 'fijo', stock: 4 },
-    { titulo: 'Auriculares Sony WH-1000XM4', jpy: 21000, tipoVenta: 'fijo', stock: 7 },
-    { titulo: 'Consola Famicom original (1985)', jpy: 45000, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Teclado mecánico HHKB', jpy: 28900, tipoVenta: 'fijo', stock: 5 },
-    { titulo: 'Batería portátil Anker 20000mAh', jpy: 5400, tipoVenta: 'fijo', stock: 15 },
-  ],
-  'Relojería': [
-    { titulo: 'Reloj Seiko 5 automático', jpy: 14650, tipoVenta: 'fijo', stock: 6 },
-    { titulo: 'Casio G-Shock GA-2100', jpy: 9800, tipoVenta: 'fijo', stock: 9 },
-    { titulo: 'Citizen Eco-Drive vintage', jpy: 22000, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Orient Bambino versión 2', jpy: 16500, tipoVenta: 'fijo', stock: 4 },
-  ],
-  'Coleccionables': [
-    { titulo: 'Figura coleccionable vintage Ultraman', jpy: 8350, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Lote de cartas Pokémon TCG (japonés)', jpy: 15200, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Manga One Piece primera edición vol.1', jpy: 6200, tipoVenta: 'fijo', stock: 3 },
-    { titulo: 'Cel de animación enmarcado (Ghibli)', jpy: 32000, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Gunpla RX-78-2 escala 1/100', jpy: 7100, tipoVenta: 'fijo', stock: 12 },
-  ],
-  'Instrumentos': [
-    { titulo: 'Guitarra acústica Yamaha FG800', jpy: 24500, tipoVenta: 'fijo', stock: 4 },
-    { titulo: 'Teclado Casio CT-S300', jpy: 18700, tipoVenta: 'fijo', stock: 5 },
-    { titulo: 'Bajo eléctrico usado Fender Jazz', jpy: 58000, tipoVenta: 'subasta', stock: 1 },
-    { titulo: 'Ukulele soprano de caoba', jpy: 5600, tipoVenta: 'fijo', stock: 8 },
-  ],
-};
+import { cargarCatalogoDemo } from './catalogo-demo.js';
 
 const USUARIOS_DEMO = [
   { email: 'laura.pineda@demo.compralatino.com', nombre: 'Laura', apellido: 'Pineda', comprasEn: ['Relojería', 'Coleccionables'] },
@@ -72,13 +24,8 @@ function tasaAUsd(jpy, tasa = 152.4, margen = 0.03) {
   return Math.round((jpy / tasa) * (1 + margen) * 100) / 100;
 }
 
-function idExterno() {
-  return `YA-${Math.floor(100000 + Math.random() * 900000)}`;
-}
-
 async function main() {
   console.log('Sembrando datos de demostración de CompraLatino (Fase 3)...');
-  const fechaActual = Date.now();
 
   await withTransaction(async (client) => {
     // Idempotencia simple: si ya hay categorías, no volver a sembrar.
@@ -92,51 +39,12 @@ async function main() {
     const rolCliente = await client.query("INSERT INTO roles (nombre, descripcion) VALUES ('cliente','Compra en la plataforma') RETURNING id");
     const rolAdmin = await client.query("INSERT INTO roles (nombre, descripcion) VALUES ('administrador','Gestión y monitoreo (M5)') RETURNING id");
 
-    // Categorías (con una subcategoría para probar el árbol de /categorias)
-    const idPorCategoria = {};
-    for (const cat of CATEGORIAS) {
-      const { rows } = await client.query('INSERT INTO categorias (nombre) VALUES ($1) RETURNING id', [cat.nombre]);
-      idPorCategoria[cat.nombre] = rows[0].id;
-      for (const hijo of cat.hijos || []) {
-        const { rows: hijoRows } = await client.query(
-          'INSERT INTO categorias (nombre, id_padre) VALUES ($1, $2) RETURNING id',
-          [hijo, rows[0].id]
-        );
-        idPorCategoria[hijo] = hijoRows[0].id;
-      }
-    }
-
     // Tipo de cambio vigente (ver wireframe W06: JPY/USD 152.40, margen 3%)
     await client.query(
       `INSERT INTO tipo_cambio (moneda_origen, moneda_destino, tasa, margen) VALUES ('JPY','USD',152.40,0.03)`
     );
 
-    // Productos
-    const productosPorCategoria = {}; // nombreCategoria -> [ids de producto]
-    for (const [nombreCat, lista] of Object.entries(PRODUCTOS_POR_CATEGORIA)) {
-      productosPorCategoria[nombreCat] = [];
-      for (const p of lista) {
-        const precioUsd = tasaAUsd(p.jpy);
-        const fechaFinSubasta = p.tipoVenta === 'subasta'
-          ? new Date(fechaActual + (2 + Math.random() * 96) * 3600 * 1000) // 2h a 4 días desde la siembra
-          : null;
-        const { rows } = await client.query(
-          `INSERT INTO productos (id_externo_ya, id_categoria, titulo, descripcion, precio_jpy, precio_usd, tipo_venta, fecha_fin_subasta, stock)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
-          [idExterno(), idPorCategoria[nombreCat], p.titulo, `${p.titulo} — importado vía YAuctions Japón.`, p.jpy, precioUsd, p.tipoVenta, fechaFinSubasta, p.stock]
-        );
-        // Placeholder local (SVG data-URI): no depende de red externa. En
-        // producción esto sería la URL real del objeto de imagen (Amazon S3 / CDN),
-        // ver supuestos_fase3.md #12.
-        const inicial = encodeURIComponent(p.titulo[0]);
-        const svg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='360'><rect width='100%25' height='100%25' fill='%23e8e8e8'/><text x='50%25' y='50%25' font-size='120' text-anchor='middle' dominant-baseline='middle' fill='%23999' font-family='sans-serif'>${inicial}</text></svg>`;
-        await client.query(
-          `INSERT INTO producto_imagenes (id_producto, url_blob, orden) VALUES ($1,$2,0)`,
-          [rows[0].id, svg]
-        );
-        productosPorCategoria[nombreCat].push(rows[0].id);
-      }
-    }
+    const productosPorCategoria = await cargarCatalogoDemo(client);
     const todosLosProductos = Object.values(productosPorCategoria).flat();
 
     // Usuarios demo + admin
@@ -276,7 +184,7 @@ async function main() {
       );
     }
 
-    console.log(`Listo: ${CATEGORIAS.length} categorías (+subcategoría), ${todosLosProductos.length} productos, ${USUARIOS_DEMO.length} usuarios demo + 1 admin.`);
+    console.log(`Listo: ${Object.keys(productosPorCategoria).length} categorías, ${todosLosProductos.length} productos, ${USUARIOS_DEMO.length} usuarios demo + 1 admin.`);
     console.log('Login admin: admin@compralatino.com / Admin1234!');
     console.log('Login demo:  laura.pineda@demo.compralatino.com / Demo1234!  (y los otros 4 usuarios listados en db/seed.js)');
   });

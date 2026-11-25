@@ -1,4 +1,5 @@
 import { query, withTransaction } from '../config/db.js';
+import { ErrorValidacion } from '../utils/errors.js';
 
 export async function buscarUsuarioPorId(idUsuario) {
   const { rows } = await query(
@@ -10,7 +11,7 @@ export async function buscarUsuarioPorId(idUsuario) {
 
 export async function listarDireccionesUsuario(idUsuario) {
   const { rows } = await query(
-    'SELECT id, pais, departamento, ciudad, detalle, es_principal FROM direcciones WHERE id_usuario = $1',
+    'SELECT id, pais, departamento, ciudad, detalle, es_principal FROM direcciones WHERE id_usuario = $1 ORDER BY es_principal DESC, id',
     [idUsuario]
   );
   return rows;
@@ -27,25 +28,28 @@ export async function actualizarPerfilUsuario(
     );
 
     if (Array.isArray(direcciones)) {
+      const idsGuardados = direcciones.flatMap((direccion) => direccion.id ? [direccion.id] : []);
       await client.query(
-        'DELETE FROM direcciones WHERE id_usuario = $1',
-        [idUsuario]
+        'DELETE FROM direcciones WHERE id_usuario = $1 AND NOT (id = ANY($2::uuid[]))',
+        [idUsuario, idsGuardados]
       );
 
       for (const d of direcciones) {
-        await client.query(
-          `INSERT INTO direcciones
-           (id_usuario, pais, departamento, ciudad, detalle, es_principal)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            idUsuario,
-            d.pais,
-            d.departamento,
-            d.ciudad,
-            d.detalle,
-            !!d.esPrincipal,
-          ]
-        );
+        const datos = [idUsuario, d.pais, d.departamento, d.ciudad, d.detalle, !!d.esPrincipal];
+        if (d.id) {
+          const { rowCount } = await client.query(
+            `UPDATE direcciones SET pais = $2, departamento = $3, ciudad = $4, detalle = $5, es_principal = $6
+             WHERE id_usuario = $1 AND id = $7`,
+            [...datos, d.id]
+          );
+          if (!rowCount) throw ErrorValidacion('La dirección seleccionada no pertenece al usuario');
+        } else {
+          await client.query(
+            `INSERT INTO direcciones (id_usuario, pais, departamento, ciudad, detalle, es_principal)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            datos
+          );
+        }
       }
     }
   });

@@ -49,6 +49,7 @@ jobs:
           export DATABASE_URL="${DATABASE_URL%/*}/compralatino_bi"
           for f in ../deploy/db-init/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"; done
           npm run seed
+          npm run catalogo:demo
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/F1_ddl_dw.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f ../bi/F2_etl.sql
           for i in 1 2; do

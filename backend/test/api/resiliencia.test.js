@@ -101,7 +101,9 @@ after(async () => {
 test(
   'Circuit Breaker: abre, rechaza sin guardar puja y se recupera tras el enfriamiento',
   { skip: SIN_BD },
-  async () => {
+  async (t) => {
+    let instante = Date.now();
+    t.mock.method(Date, 'now', () => instante);
     const inicial = await metricas();
 
     assert.equal(inicial.status, 200);
@@ -152,8 +154,8 @@ test(
       'el circuito abierto no debe llamar nuevamente a YAuctions'
     );
 
-    // Después del cooldown, una llamada sana debe cerrar el circuito.
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // Avanza el reloj del circuito sin depender de la carga de la base de datos.
+    instante += 200;
 
     const recuperada = await ofertar({
       idProducto: subasta.productos[0].id,

@@ -54,10 +54,13 @@ usuariosRouter.put(
 
     if (Array.isArray(direcciones)) {
       for (const d of direcciones) {
-        if (!d.pais || !d.departamento || !d.ciudad || !d.detalle) {
+        if (!d?.pais || !d.departamento || !d.ciudad || !d.detalle) {
           throw ErrorValidacion(
             'Cada dirección requiere pais, departamento, ciudad y detalle'
           );
+        }
+        if (d.id && (typeof d.id !== 'string' || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(d.id))) {
+          throw ErrorValidacion('id de dirección inválido');
         }
       }
     }

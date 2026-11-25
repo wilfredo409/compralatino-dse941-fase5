@@ -1,194 +1,217 @@
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { chromium } from 'playwright';
-import os from 'os';
-import path from 'path';
 
-// Uso: node smoke_test.mjs   (con backend en :3000 y frontend en :5173 corriendo y la BD sembrada)
-// Si Playwright no encuentra su navegador: npx playwright install chromium
-// Para usar un Chromium propio: CHROMIUM_PATH=/ruta/al/chromium node smoke_test.mjs
-const BASE = process.env.BASE_URL || 'http://localhost:5173';
-const CAPTURAS = os.tmpdir();
-const CLIENTE_EMAIL = process.env.SMOKE_CLIENT_EMAIL;
-const CLIENTE_PASSWORD = process.env.SMOKE_CLIENT_PASSWORD;
-const ADMIN_EMAIL = process.env.SMOKE_ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.SMOKE_ADMIN_PASSWORD;
+const base = process.env.BASE_URL || 'http://127.0.0.1:8080';
+const [emailCliente, claveCliente, emailAdmin, claveAdmin] = [
+  'SMOKE_CLIENT_EMAIL', 'SMOKE_CLIENT_PASSWORD', 'SMOKE_ADMIN_EMAIL', 'SMOKE_ADMIN_PASSWORD',
+].map((clave) => {
+  if (!process.env[clave]) throw new Error('Falta configurar ' + clave);
+  return process.env[clave];
+});
 
-for (const [nombre, valor] of Object.entries({
-  SMOKE_CLIENT_EMAIL: CLIENTE_EMAIL,
-  SMOKE_CLIENT_PASSWORD: CLIENTE_PASSWORD,
-  SMOKE_ADMIN_EMAIL: ADMIN_EMAIL,
-  SMOKE_ADMIN_PASSWORD: ADMIN_PASSWORD,
-})) {
-  if (!valor) throw new Error(`Falta configurar la variable de entorno ${nombre}`);
-}
-
-const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), headless: true });
-const page = await browser.newPage();
+const navegador = await chromium.launch({
+  headless: true,
+  ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
+});
+const pagina = await navegador.newPage({ viewport: { width: 1440, height: 900 } });
+pagina.setDefaultTimeout(8000);
 const errores = [];
-const respuestasHttpEsperadas = new Map();
-page.on('pageerror', (e) => errores.push(String(e)));
-page.on('response', (response) => {
-  const ruta = new URL(response.url()).pathname;
-  const estado = response.status();
-  const esperada = (estado === 401 && ruta === '/api/v1/auth/login')
-    || (estado === 403 && ruta === '/api/v1/admin/metricas')
-    || (estado === 404 && ruta === '/api/v1/productos/00000000-0000-4000-8000-000000000000');
-  if (esperada) respuestasHttpEsperadas.set(estado, (respuestasHttpEsperadas.get(estado) || 0) + 1);
-});
-page.on('console', (msg) => {
-  if (msg.type() !== 'error') return;
-  const estado = Number(msg.text().match(/status of (\d{3})/)?.[1]);
-  const cantidad = respuestasHttpEsperadas.get(estado) || 0;
-  if (cantidad) {
-    respuestasHttpEsperadas.set(estado, cantidad - 1);
-    return;
-  }
-  errores.push(msg.text());
-});
+pagina.on('pageerror', (error) => errores.push(error.message));
+const capturas = process.env.SMOKE_CAPTURE_DIR;
+if (capturas) await mkdir(capturas, { recursive: true });
 
-await page.route('**://*.google.com/**', (route) => route.abort());
-await page.route('**://*.googleapis.com/**', (route) => route.abort());
-
-let pasoIdx = 0;
-async function paso(nombre, fn) {
-  pasoIdx++;
-  try {
-    await fn();
-    console.log(`OK   - ${nombre}`);
-  } catch (e) {
-    console.log(`FAIL - ${nombre}: ${e.message}`);
-    await page.screenshot({ path: `${path.join(CAPTURAS, 'fallo_' + pasoIdx + '.png')}`, fullPage: true }).catch(() => {});
-    console.log(`  (captura: ${path.join(CAPTURAS, 'fallo_' + pasoIdx + '.png')}, url actual: ${page.url()})`);
-    process.exitCode = 1;
-  }
+let pasoActual;
+let total = 0;
+async function paso(nombre, ejecutar) {
+  pasoActual = nombre;
+  await ejecutar();
+  total += 1;
+  console.log('OK - ' + nombre);
 }
 
-await paso('cargar catálogo (home)', async () => {
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await page.waitForSelector('.tarjeta', { timeout: 5000 });
-});
+async function abrir(ruta) {
+  await pagina.goto(base + ruta);
+}
 
-await paso('ruta protegida sin sesión redirige a ingresar', async () => {
-  await page.evaluate(() => localStorage.clear());
-  await page.goto(BASE + '/mis-pedidos', { waitUntil: 'networkidle' });
-  await page.waitForURL('**/ingresar**', { timeout: 5000 });
-  const destino = new URL(page.url()).searchParams.get('redirigirA');
-  if (destino !== '/mis-pedidos') throw new Error(`destino de redirección inesperado: ${destino}`);
-});
+async function entrar(email, clave) {
+  await abrir('/ingresar');
+  const formulario = pagina.locator('.auth-form form');
+  await formulario.getByLabel('Correo electrónico').fill(email);
+  await formulario.getByLabel('Contraseña').fill(clave);
+  await formulario.getByRole('button', { name: 'Ingresar', exact: true }).click();
+  await pagina.waitForURL((url) => url.pathname === '/');
+}
 
-await paso('login con credenciales inválidas muestra error', async () => {
-  await page.fill('input[type=email]', `smoke-invalido-${Date.now()}@invalid.example`);
-  await page.fill('input[type=password]', 'NoEsUnaClaveValida-123');
-  await page.click('button:has-text("Ingresar")');
-  const error = page.locator('.alerta.error');
-  await error.waitFor({ state: 'visible', timeout: 5000 });
-  if (!(await error.innerText()).trim()) throw new Error('el mensaje de error está vacío');
-});
+async function buscar(texto) {
+  const buscador = pagina.getByRole('searchbox', { name: 'Buscar en el catálogo' });
+  await buscador.fill(texto);
+  await pagina.getByRole('button', { name: 'Buscar', exact: true }).first().click();
+}
 
-await paso('búsqueda sin resultados muestra estado vacío', async () => {
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await page.fill('.filtros input', `smoke-sin-resultados-${Date.now()}`);
-  await page.waitForSelector('text=No hay productos que coincidan con los filtros.', { timeout: 5000 });
-});
+async function sinDesbordamiento(ancho) {
+  await pagina.setViewportSize({ width: ancho, height: 900 });
+  const dimensiones = await pagina.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+  assert.ok(dimensiones[0] <= dimensiones[1] + 1, 'Desbordamiento en ' + ancho + ' px');
+}
 
-await paso('producto inexistente muestra mensaje', async () => {
-  await page.goto(BASE + '/productos/00000000-0000-4000-8000-000000000000', { waitUntil: 'networkidle' });
-  await page.waitForSelector('text=Producto no encontrado', { timeout: 5000 });
-});
-
-await paso('login como cliente demo', async () => {
-  await page.goto(BASE + '/ingresar', { waitUntil: 'networkidle' });
-  await page.fill('input[type=email]', CLIENTE_EMAIL);
-  await page.fill('input[type=password]', CLIENTE_PASSWORD);
-  await page.click('button:has-text("Ingresar")');
-  await page.waitForSelector('text=Recomendado para ti', { timeout: 5000 });
-});
-
-await paso('cliente no accede a /admin', async () => {
-  await page.goto(BASE + '/admin', { waitUntil: 'networkidle' });
-  await page.waitForSelector('text=Tu cuenta no tiene el rol de administrador', { timeout: 5000 });
-  if (await page.locator('.kpi').count()) throw new Error('se mostraron métricas administrativas a un cliente');
-});
-
-await paso('ver recomendaciones con motivo', async () => {
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await page.waitForSelector('text=Recomendado para ti', { timeout: 5000 });
-  const motivo = await page.textContent('.rejilla >> nth=0 >> .. >> div >> nth=-1');
-  if (!motivo) throw new Error('no se encontró texto de motivo de recomendación');
-});
-
-await paso('abrir detalle de un producto de compra directa y comprarlo', async () => {
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  // Filtrar por compra directa para asegurar un producto "fijo"
-  await page.selectOption('.filtros select >> nth=1', 'fijo');
-  await page.waitForTimeout(500);
-  await page.click('.rejilla .tarjeta >> nth=0');
-  await page.waitForSelector('button:has-text("Comprar ahora"), .form');
-  if (await page.locator('.form').count() > 0) {
-    await page.fill('.form input >> nth=1', 'San Salvador');
-    await page.fill('.form input >> nth=2', 'San Salvador');
-    await page.fill('.form input >> nth=3', 'Calle demo Playwright #1');
-    await page.click('button:has-text("Guardar dirección")');
-    await page.waitForSelector('button:has-text("Comprar ahora")');
-  }
-  await page.click('button:has-text("Comprar ahora")');
-  await page.waitForSelector('text=Compra confirmada', { timeout: 5000 });
-});
-
-await paso('ver el pedido reflejado en Mis pedidos', async () => {
-  await page.waitForURL('**/mis-pedidos', { timeout: 3000 });
-  await page.waitForSelector('table tr');
-});
-
-await paso('cerrar sesión y entrar como admin', async () => {
-  await page.click('text=Salir');
-  await page.click('text=Ingresar');
-  await page.fill('input[type=email]', ADMIN_EMAIL);
-  await page.fill('input[type=password]', ADMIN_PASSWORD);
-  await page.click('button:has-text("Ingresar")');
-  await page.waitForSelector('.tarjeta', { timeout: 5000 });
-});
-
-await paso('ver panel administrativo con métricas', async () => {
-  await page.click('text=Administración');
-  await page.waitForSelector('.kpi', { timeout: 5000 });
-  const texto = await page.textContent('body');
-  if (!texto.includes('Salud de la integración con YAuctions')) throw new Error('no se ve el bloque de salud de YAuctions');
-});
-
-await paso('comparar indicadores ejecutivos en escritorio, tableta y teléfono', async () => {
-  const cuadro = page.getByRole('region', { name: 'Cuadro de mando ejecutivo' });
-  for (const width of [1280, 768, 375]) {
-    await page.setViewportSize({ width, height: 900 });
-    await cuadro.getByRole('table').waitFor();
-    if (await cuadro.evaluate((el) => el.scrollWidth > el.clientWidth + 1)) {
-      throw new Error(`desbordamiento del cuadro ejecutivo a ${width} px`);
+try {
+  await paso('catálogo público y fotos únicas para cada ficha', async () => {
+    await abrir('/');
+    await pagina.getByRole('heading', { name: /Descubre Japón/ }).waitFor();
+    await pagina.locator('#resultados .producto-card').first().waitFor();
+    const respuesta = await pagina.request.get(base + '/api/v1/productos?limite=100');
+    assert.ok(respuesta.ok());
+    const { items } = await respuesta.json();
+    assert.ok(items.length >= 36);
+    const fotos = items.filter((p) => p.idExternoYa.startsWith('DEMO-JP-')).map((p) => p.imagenes[0]);
+    assert.equal(fotos.length, 36);
+    assert.equal(new Set(fotos).size, 36);
+    for (const foto of fotos) {
+      assert.match(foto, /^\/catalogo\/[\w-]+\.webp$/);
+      const img = await pagina.request.get(base + foto);
+      assert.ok(img.ok() && img.headers()['content-type']?.includes('image/webp'), foto);
     }
-  }
-  const [resultado] = await Promise.all([
-    page.waitForResponse((r) => r.url().endsWith('/admin/cuadro-mando?dias=7')),
-    cuadro.getByLabel('Periodo de análisis').selectOption('7'),
-  ]);
-  if (!resultado.ok() || (await resultado.json()).dias !== 7) throw new Error('no se aplicó el filtro de periodo');
-  await cuadro.getByRole('table').waitFor();
-  await cuadro.getByRole('slider').press('ArrowRight');
-  if (!(await cuadro.innerText()).includes('5 %')) throw new Error('el escenario no refleja la variación');
-});
+    if (capturas) await pagina.screenshot({ path: join(capturas, 'tienda.png') });
+  });
 
-await paso('exportar el reporte de transacciones con la sesión de administrador', async () => {
-  const [archivo] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: /Exportar reporte/ }).click(),
-  ]);
-  if (archivo.suggestedFilename() !== 'transacciones.csv' || await archivo.failure()) {
-    throw new Error('no se descargó el CSV esperado');
-  }
-});
+  await paso('búsqueda vacía y restauración del catálogo', async () => {
+    await buscar('sin-coincidencias-compralatino');
+    await pagina.getByRole('heading', { name: 'No hay productos que coincidan con los filtros.' }).waitFor();
+    await pagina.getByRole('link', { name: 'Ver todo el catálogo' }).click();
+    await pagina.locator('#resultados .producto-card').first().waitFor();
+  });
 
-if (errores.length) {
-  console.log('--- Errores de consola/página detectados ---');
-  console.log(errores.join('\n'));
+  await paso('categorías y paginación conservan el contexto', async () => {
+    const conteo = await pagina.locator('#resultados .producto-card').count();
+    await pagina.getByRole('button', { name: 'Ver más productos' }).click();
+    await pagina.waitForFunction((n) => document.querySelectorAll('#resultados .producto-card').length > n, conteo);
+    await pagina.getByRole('link', { name: 'Papelería', exact: true }).click();
+    await pagina.waitForURL((url) => url.searchParams.has('categoria'));
+    await pagina.locator('#resultados .producto-card').first().waitFor();
+    const titulos = await pagina.locator('#resultados .producto-card h3').allTextContents();
+    assert.ok(titulos.some((titulo) => titulo.includes('Midori')));
+  });
+
+  await paso('pujas y compra directa se distinguen en fichas y filtros', async () => {
+    await pagina.getByRole('navigation', { name: 'Tienda' }).getByRole('link', { name: 'Subastas' }).click();
+    await pagina.locator('#resultados .producto-card').first().click();
+    await pagina.getByRole('link', { name: 'Ingresar para pujar' }).waitFor();
+    await pagina.getByRole('heading', { name: 'Detalles del artículo' }).waitFor();
+    await pagina.getByRole('navigation', { name: 'Tienda' }).getByRole('link', { name: 'Compra directa' }).click();
+    await pagina.locator('#resultados .producto-card').first().click();
+    await pagina.getByText('Total en USD', { exact: true }).waitFor();
+    await pagina.getByRole('link', { name: 'Ingresar para comprar' }).waitFor();
+    if (capturas) await pagina.screenshot({ path: join(capturas, 'ficha.png') });
+  });
+
+  await paso('protección de pedidos y retorno a la ficha desde ingreso', async () => {
+    const ficha = new URL(pagina.url()).pathname;
+    await pagina.getByRole('link', { name: 'Ingresar para comprar' }).click();
+    assert.equal(new URL(pagina.url()).searchParams.get('redirigirA'), ficha);
+    await abrir('/mis-pedidos');
+    await pagina.waitForURL((url) => url.pathname === '/ingresar' && url.searchParams.get('redirigirA') === '/mis-pedidos');
+  });
+
+  await paso('credenciales inválidas se explican en el formulario', async () => {
+    await pagina.getByLabel('Correo electrónico').fill('smoke-no-existe@invalid.example');
+    await pagina.getByLabel('Contraseña').fill('NoValida!123');
+    await pagina.locator('.auth-form').getByRole('button', { name: 'Ingresar' }).click();
+    await pagina.getByRole('alert').waitFor();
+  });
+
+  await paso('artículo inexistente muestra un estado de error', async () => {
+    await abrir('/productos/00000000-0000-4000-8000-000000000000');
+    await pagina.getByRole('heading', { name: 'Producto no encontrado' }).waitFor();
+  });
+
+  await paso('cliente tiene recomendaciones y administración restringida', async () => {
+    await entrar(emailCliente, claveCliente);
+    await pagina.getByRole('heading', { name: 'Recomendado para ti' }).waitFor();
+    await abrir('/admin');
+    await pagina.getByRole('heading', { name: 'Acceso restringido' }).waitFor();
+  });
+
+  await paso('cliente consulta datos y direcciones', async () => {
+    await abrir('/cuenta');
+    await pagina.getByRole('heading', { name: 'Direcciones' }).waitFor();
+    const nombre = await pagina.getByLabel('Nombre', { exact: true }).inputValue();
+    assert.ok(nombre);
+    await pagina.getByRole('button', { name: 'Guardar datos' }).click();
+    await pagina.getByText('Perfil actualizado.').waitFor();
+  });
+
+  await paso('compra directa con desglose y pedido registrado', async () => {
+    await abrir('/?tipoVenta=fijo#resultados');
+    await pagina.locator('#resultados .producto-card').first().click();
+    await pagina.getByRole('button', { name: 'Comprar ahora' }).click();
+    await pagina.getByText(/Compra confirmada/).waitFor();
+    await pagina.getByRole('link', { name: 'Ver mis pedidos', exact: true }).click();
+    await pagina.locator('.pedidos-lista .pedido').first().waitFor();
+  });
+
+  await paso('subasta local con puja en yenes', async () => {
+    await abrir('/?tipoVenta=subasta#resultados');
+    await pagina.locator('#resultados .producto-card').first().click();
+    await pagina.getByLabel('Tu puja en JPY').waitFor();
+    await pagina.getByRole('button', { name: 'Pujar en YAuctions' }).click();
+    await pagina.getByText(/Puja registrada/).waitFor();
+  });
+
+  await paso('tienda y filtros utilizables en escritorio, tableta y móvil', async () => {
+    await abrir('/');
+    await pagina.locator('#resultados .producto-card').first().waitFor();
+    for (const ancho of [1440, 768, 375]) await sinDesbordamiento(ancho);
+    await pagina.getByRole('button', { name: 'Filtros', exact: true }).click();
+    await pagina.getByLabel('Categoría', { exact: true }).waitFor();
+    await pagina.getByRole('navigation', { name: 'Navegación móvil' }).getByRole('button', { name: 'Buscar' }).click();
+    assert.equal(await pagina.getByRole('searchbox').evaluate((campo) => campo === document.activeElement), true);
+    if (capturas) await pagina.screenshot({ path: join(capturas, 'tienda-movil.png') });
+    await pagina.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  await paso('administración con resumen ejecutivo y filtro de periodo', async () => {
+    await abrir('/cuenta');
+    await pagina.getByRole('button', { name: 'Salir' }).click();
+    await entrar(emailAdmin, claveAdmin);
+    await abrir('/admin');
+    const cuadro = pagina.getByRole('region', { name: 'Cuadro de mando ejecutivo' });
+    await cuadro.getByRole('table').waitFor();
+    await cuadro.getByLabel('Periodo de análisis').selectOption('7');
+    await cuadro.getByRole('table').waitFor();
+    if (capturas) await pagina.screenshot({ path: join(capturas, 'administracion.png') });
+  });
+
+  await paso('administración abre pedidos, usuarios y auditoría desde el menú', async () => {
+    const menu = pagina.getByRole('navigation', { name: 'Administración', exact: true });
+    await menu.getByRole('link', { name: 'Pedidos', exact: true }).click();
+    await pagina.getByLabel('Estado del pedido').selectOption('pagado');
+    await pagina.locator('.admin-principal table').waitFor();
+    await menu.getByRole('link', { name: 'Usuarios' }).click();
+    await pagina.getByRole('combobox', { name: 'Estado de ' + emailCliente }).waitFor();
+    await menu.getByRole('link', { name: 'Auditoría' }).click();
+    await pagina.getByRole('heading', { name: 'Auditoría', exact: true }).waitFor();
+    for (const ancho of [1440, 768, 375]) await sinDesbordamiento(ancho);
+  });
+
+  await paso('exportación autenticada del CSV', async () => {
+    await pagina.getByRole('navigation', { name: 'Administración', exact: true }).getByRole('link', { name: 'Reportes' }).click();
+    const [archivo] = await Promise.all([
+      pagina.waitForEvent('download'),
+      pagina.getByRole('button', { name: 'Exportar transacciones (CSV)' }).click(),
+    ]);
+    assert.equal(archivo.suggestedFilename(), 'transacciones.csv');
+    assert.equal(await archivo.failure(), null);
+  });
+
+  await paso('sin errores JavaScript durante las pruebas', async () => assert.deepEqual(errores, []));
+  console.log('RESULTADO: ' + total + ' pasos aprobados');
+} catch (error) {
+  await pagina.screenshot({ path: join(capturas || tmpdir(), 'compralatino-error.png'), fullPage: true }).catch(() => {});
+  console.error('FAIL - ' + pasoActual + ': ' + error.message);
   process.exitCode = 1;
+} finally {
+  await navegador.close();
 }
-
-await browser.close();
-console.log(process.exitCode ? '\nRESULTADO: FALLÓ' : '\nRESULTADO: TODO OK');

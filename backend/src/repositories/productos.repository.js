@@ -39,7 +39,10 @@ export async function listarProductos({
     : '';
 
   const { rows } = await query(
-    `SELECT * FROM productos ${where}
+    `SELECT p.*, ARRAY(
+       SELECT foto.url_blob FROM producto_imagenes foto
+       WHERE foto.id_producto = p.id ORDER BY foto.orden, foto.id
+     ) AS imagenes FROM productos p ${where}
      ORDER BY date_trunc('milliseconds', fecha_sincronizacion) DESC, id DESC
      LIMIT $${i}`,
     [...params, limite + 1]
@@ -57,7 +60,7 @@ export async function buscarProductoPorId(id) {
 
 export async function listarImagenesProducto(id) {
   const { rows } = await query(
-    'SELECT url_blob FROM producto_imagenes WHERE id_producto = $1 ORDER BY orden',
+    'SELECT url_blob FROM producto_imagenes WHERE id_producto = $1 ORDER BY orden, id',
     [id]
   );
   return rows;

@@ -7,10 +7,11 @@ import {
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { ErrorNoEncontrado } from '../utils/errors.js';
 import { limiteDesdeQuery, decodificarCursor, codificarCursor } from '../utils/pagination.js';
+import { calcularPrecioPedido } from '../services/precioPedido.service.js';
 
 export const productosRouter = Router();
 
-function serializarProducto(row, imagenes = []) {
+function serializarProducto(row, imagenes = row.imagenes || []) {
   return {
     id: row.id,
     idExternoYa: row.id_externo_ya,
@@ -22,6 +23,7 @@ function serializarProducto(row, imagenes = []) {
     tipoVenta: row.tipo_venta,
     fechaFinSubasta: row.fecha_fin_subasta,
     stock: row.stock,
+    resumen: row.descripcion?.split(/\n\s*\n/, 1)[0] || null,
     imagenes,
   };
 }
@@ -66,8 +68,10 @@ productosRouter.get(
     }
 
     const imgs = await listarImagenesProducto(req.params.id);
-    res.json(
-      serializarProducto(producto, imgs.map((i) => i.url_blob))
-    );
+    const detalle = serializarProducto(producto, imgs.map((i) => i.url_blob));
+    if (detalle.tipoVenta === 'fijo' && detalle.precioUsd !== null) {
+      detalle.estimacionCompra = calcularPrecioPedido(detalle.precioUsd);
+    }
+    res.json(detalle);
   })
 );

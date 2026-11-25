@@ -545,6 +545,7 @@ components:
         idExternoYa: { type: string, maxLength: 60 }
         idCategoria: { type: integer }
         titulo: { type: string, maxLength: 200 }
+        resumen: { type: string, nullable: true, description: Primer párrafo de la presentación del artículo }
         descripcion: { type: string, nullable: true }
         precioJpy: { type: number }
         precioUsd: { type: number, nullable: true }
@@ -553,7 +554,15 @@ components:
         stock: { type: integer }
         imagenes:
           type: array
-          items: { type: string, format: uri }
+          items: { type: string, format: uri-reference }
+        estimacionCompra:
+          description: Costos de una unidad en la ficha de un producto de compra directa
+          type: object
+          properties:
+            subtotalUsd: { type: number }
+            fleteUsd: { type: number }
+            comisionUsd: { type: number }
+            totalUsd: { type: number }
 
     Pedido:
       type: object
